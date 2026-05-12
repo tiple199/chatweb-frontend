@@ -1,12 +1,39 @@
-import { api } from "./axios";
+import { api } from '../lib/axios'; //[cite: 2]
+import type { Message, MessageRead } from '../types/message.type';
+import type { BackendMessage } from '../lib/messageMapper';
 
-export const getMessages = async (conversationId: string, page: number = 1) => {
-  // Gửi request kèm tham số page và limit
-  const response = await api.get(`/messages/${conversationId}?page=${page}&limit=20`);
-  
-  /**
-   * Cấu trúc response data trả về: 
-   * { success: true, messages: [], currentPage: 1, totalPages: 5 }
-   */
-  return response.data;
+interface MessageHistoryResponse {
+  messages: BackendMessage[];
+  currentPage: number;
+  totalPages: number;
+  totalMessages: number;
+}
+
+export const messageApi = {
+  // Lấy lịch sử tin nhắn của một conversation
+  getMessages: (conversationId: string) => 
+    api.get<{ data: MessageHistoryResponse }>(`/messages/${conversationId}`),
+
+  // Gửi tin nhắn (Hỗ trợ file đính kèm dựa trên MessageType)
+  sendMessage: (conversationId: string, content: string, file?: File) => {
+    const formData = new FormData();
+    formData.append('ConversationId', conversationId.toString());
+    formData.append('Content', content);
+    if (file) {
+      formData.append('file', file); // Sẽ xử lý để lấy FileName, FileSize, MimeType tại backend
+    }
+    return api.post<BackendMessage>('/messages', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
+  // Đánh dấu đã đọc tin nhắn
+  markAsRead: (messageId: string) => 
+    api.post<MessageRead>(`/messages/${messageId}/read`),
+
+  // Tìm kiếm tin nhắn, ảnh, file
+  searchMessages: (conversationId: string, query: string, type?: string) => 
+    api.get<Message[]>(`/messages/search`, { 
+      params: { ConversationId: conversationId, keyword: query, MessageType: type } 
+    }),
 };
