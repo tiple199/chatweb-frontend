@@ -57,28 +57,104 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <form onSubmit={handleRegister} className="w-96 bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-green-600">Đăng Ký</h2>
-        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
-        
-        <input name="fullName" type="text" placeholder="Họ và tên" className="w-full mb-3 p-2 border rounded" onChange={handleChange} required />
-        
-        <div className="flex mb-3 gap-2">
-          <input name="email" type="email" placeholder="Email" className="w-full p-2 border rounded" onChange={handleChange} required />
-          <button type="button" onClick={handleSendOtp} className="bg-gray-200 px-3 rounded whitespace-nowrap text-sm hover:bg-gray-300">
-            {isOtpSent ? 'Gửi lại OTP' : 'Gửi OTP'}
-          </button>
+    <div className="auth-wrapper">
+      <form onSubmit={handleRegister} className="auth-card">
+        {/* Logo */}
+        <div className="auth-logo">
+          <div className="auth-logo-icon">✨</div>
         </div>
 
-        <input name="otp" type="text" placeholder="Mã OTP" className="w-full mb-3 p-2 border rounded" onChange={handleChange} required />
-        <input name="password" type="password" placeholder="Mật khẩu" className="w-full mb-3 p-2 border rounded" onChange={handleChange} required />
-        <input name="confirmPassword" type="password" placeholder="Xác nhận mật khẩu" className="w-full mb-6 p-2 border rounded" onChange={handleChange} required />
+        <h1 className="auth-title">Tạo tài khoản</h1>
+        <p className="auth-subtitle">Tham gia và bắt đầu trò chuyện ngay hôm nay</p>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <div className="auth-field">
+          <label className="auth-label">Họ và tên</label>
+          <input
+            id="register-fullname"
+            name="fullName"
+            type="text"
+            placeholder="Nguyễn Văn A"
+            className="auth-input"
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Email</label>
+          <div className="auth-input-group">
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              className="auth-input"
+              onChange={handleChange}
+              required
+            />
+            <button
+              id="register-send-otp"
+              type="button"
+              onClick={handleSendOtp}
+              className="auth-btn-otp"
+            >
+              {isOtpSent ? 'Gửi lại' : 'Gửi OTP'}
+            </button>
+          </div>
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Mã OTP</label>
+          <input
+            id="register-otp"
+            name="otp"
+            type="text"
+            placeholder="Nhập mã 6 chữ số"
+            className="auth-input"
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Mật khẩu</label>
+          <input
+            id="register-password"
+            name="password"
+            type="password"
+            placeholder="Tối thiểu 8 ký tự"
+            className="auth-input"
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Xác nhận mật khẩu</label>
+          <input
+            id="register-confirm-password"
+            name="confirmPassword"
+            type="password"
+            placeholder="Nhập lại mật khẩu"
+            className="auth-input"
+            onChange={handleChange}
+            required
+          />
+        </div>
         
-        <button type="submit" className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700">Đăng ký</button>
+        <button
+          id="register-submit"
+          type="submit"
+          className="auth-btn-primary"
+        >
+          Tạo tài khoản
+        </button>
         
-        <div className="mt-4 text-center text-sm">
-          Đã có tài khoản? <Link to="/login" className="text-green-600 hover:underline">Đăng nhập</Link>
+        <div className="auth-footer">
+          Đã có tài khoản?{' '}
+          <Link to="/login">Đăng nhập</Link>
         </div>
       </form>
     </div>

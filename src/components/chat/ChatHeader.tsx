@@ -7,30 +7,56 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation, onOpenSidebar }) => {
-  if (!conversation) return <div className="h-16 border-b bg-white flex items-center px-4 shadow-sm text-gray-500">Chưa chọn cuộc trò chuyện</div>;
+  if (!conversation) {
+    return (
+      <div className="chat-header-placeholder">
+        Chọn một cuộc trò chuyện để bắt đầu
+      </div>
+    );
+  }
 
   return (
-    <div className="h-16 border-b bg-white flex items-center justify-between px-4 shadow-sm z-10 relative">
-      <div className="flex items-center gap-3">
+    <div className="chat-header">
+      <div className="chat-header-left">
         {/* Nút menu cho mobile */}
-        <button onClick={onOpenSidebar} className="md:hidden text-gray-500 hover:text-gray-700">
+        <button
+          onClick={onOpenSidebar}
+          className="chat-header-btn"
+          style={{ display: 'none' }}
+          aria-label="Mở sidebar"
+        >
           ☰
         </button>
-        
-        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+
+        <div className="chat-header-avatar">
           {conversation.ChatName.charAt(0).toUpperCase()}
         </div>
-        <div>
-          <h2 className="font-semibold text-gray-800">{conversation.ChatName}</h2>
-          <span className="text-xs text-green-500">
-            {conversation.IsGroupChat ? 'Nhóm trò chuyện' : 'Đang hoạt động'}
-          </span>
+
+        <div className="chat-header-info">
+          <h2>{conversation.ChatName}</h2>
+          <div className="chat-header-status">
+            {conversation.IsGroupChat ? '👥 Nhóm trò chuyện' : '● Đang hoạt động'}
+          </div>
         </div>
       </div>
-      
-      <div className="flex gap-2">
-        <button className="p-2 text-gray-400 hover:text-blue-500 transition" title="Tìm kiếm tin nhắn">🔍</button>
-        <button className="p-2 text-gray-400 hover:text-blue-500 transition" title="Thông tin">ℹ️</button>
+
+      <div className="chat-header-actions">
+        <button
+          id="header-search-btn"
+          className="chat-header-btn"
+          title="Tìm kiếm tin nhắn"
+          aria-label="Tìm kiếm"
+        >
+          🔍
+        </button>
+        <button
+          id="header-info-btn"
+          className="chat-header-btn"
+          title="Thông tin"
+          aria-label="Thông tin"
+        >
+          ℹ️
+        </button>
       </div>
     </div>
   );

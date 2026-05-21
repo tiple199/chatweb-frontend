@@ -47,38 +47,60 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="w-96 bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Đăng Nhập</h2>
-        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
-        
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-          className="w-full mb-4 p-2 text-black border rounded focus:outline-none focus:border-blue-500"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Mật khẩu"
-          value={password}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-          className="w-full mb-6 p-2 text-black border rounded focus:outline-none focus:border-blue-500"
-          required
-        />
+    <div className="auth-wrapper">
+      <form onSubmit={handleLogin} className="auth-card">
+        {/* Logo */}
+        <div className="auth-logo">
+          <div className="auth-logo-icon">💬</div>
+        </div>
+
+        <h1 className="auth-title">Chào mừng trở lại</h1>
+        <p className="auth-subtitle">Đăng nhập để tiếp tục trò chuyện</p>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <div className="auth-field">
+          <label className="auth-label">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            className="auth-input"
+            required
+          />
+        </div>
+
+        <div className="auth-field">
+          <label className="auth-label">Mật khẩu</label>
+          <input
+            id="login-password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            className="auth-input"
+            required
+          />
+        </div>
         
         <button 
+          id="login-submit"
           type="submit" 
           disabled={isLoading}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition disabled:bg-blue-300"
+          className="auth-btn-primary"
         >
-          {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+          {isLoading ? (
+            <span className="auth-loading-dots">
+              <span /><span /><span />
+            </span>
+          ) : 'Đăng nhập'}
         </button>
         
-        <div className="mt-4 text-center text-sm">
-          Chưa có tài khoản? <Link to="/register" className="text-blue-600 hover:underline">Đăng ký ngay</Link>
+        <div className="auth-footer">
+          Chưa có tài khoản?{' '}
+          <Link to="/register">Đăng ký ngay</Link>
         </div>
       </form>
     </div>

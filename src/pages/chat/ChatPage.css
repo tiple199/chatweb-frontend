@@ -1,3 +1,5 @@
+/* ChatPage.css – các style chính đã chuyển sang App.css */
+
 .chat-layout {
   display: flex;
   height: 100vh;
@@ -22,4 +24,5 @@
   flex-direction: column;
   position: relative;
   background-color: var(--bg-app);
+  overflow: hidden;
 }

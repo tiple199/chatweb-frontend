@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useSocket } from '../../hooks/useSocket';
-import './MessageInput.css'
 
 interface MessageInputProps {
   conversationId: string;
@@ -79,57 +78,73 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
     }
   };
 
-  return (
-    <form onSubmit={handleSend} className="p-4 bg-white border-t flex items-center gap-2">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] || null)}
-        className="hidden"
-        id="file-upload"
-      />
-      <label htmlFor="file-upload" className="cursor-pointer p-2 text-gray-500 hover:text-blue-500">
-        📎
-      </label>
-      
-      {file && <span className="text-xs truncate max-w-[100px] text-blue-500">{file.name}</span>}
-      
-      <input
-        type="text"
-        value={content}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-          const nextValue = e.target.value;
-          setContent(nextValue);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-          if (nextValue.trim().length > 0) {
+  return (
+    <form onSubmit={handleSend} className="message-input-container">
+      <div className="input-wrapper">
+        {/* Hidden file input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] || null)}
+          className="hidden"
+          id="file-upload"
+          style={{ display: 'none' }}
+        />
+        <label htmlFor="file-upload" className="input-attach-btn" title="Đính kèm tệp">
+          📎
+        </label>
+
+        {file && <span className="file-badge">{file.name}</span>}
+
+        <input
+          id="message-input"
+          type="text"
+          value={content}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const nextValue = e.target.value;
+            setContent(nextValue);
+
+            if (nextValue.trim().length > 0) {
+              if (stopTypingTimeoutRef.current) {
+                clearTimeout(stopTypingTimeoutRef.current);
+                stopTypingTimeoutRef.current = null;
+              }
+              emitTypingIfNeeded();
+              return;
+            }
+
             if (stopTypingTimeoutRef.current) {
               clearTimeout(stopTypingTimeoutRef.current);
-              stopTypingTimeoutRef.current = null;
             }
-            emitTypingIfNeeded();
-            return;
-          }
 
-          if (stopTypingTimeoutRef.current) {
-            clearTimeout(stopTypingTimeoutRef.current);
-          }
+            stopTypingTimeoutRef.current = setTimeout(() => {
+              emitStopTyping();
+            }, 0);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder="Nhập tin nhắn..."
+          className="input-field"
+          disabled={isSending}
+          autoComplete="off"
+        />
 
-          stopTypingTimeoutRef.current = setTimeout(() => {
-            emitStopTyping();
-          }, 0);
-        }}
-        placeholder="Nhập tin nhắn..."
-        className="flex-1 p-2 border rounded-full focus:outline-none focus:border-blue-500"
-        disabled={isSending}
-      />
-      
-      <button 
-        type="submit" 
-        disabled={isSending}
-        className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:bg-blue-300"
-      >
-        Gửi
-      </button>
+        <button
+          id="send-button"
+          type="submit"
+          disabled={isSending || (!content.trim() && !file)}
+          className="send-button"
+          aria-label="Gửi tin nhắn"
+        >
+          {isSending ? '⏳' : '➤'}
+        </button>
+      </div>
     </form>
   );
 };

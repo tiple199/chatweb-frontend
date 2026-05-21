@@ -6,7 +6,6 @@ import { useSocket } from '../../hooks/useSocket';
 import { useAuthStore } from '../../store/auth.store';
 import MessageInput from './MessageInput';
 import { mapBackendMessage, mapBackendMessages, type BackendMessage } from '../../lib/messageMapper';
-import './ChatMess.css'
 
 interface ChatWindowProps {
   conversationId: string;
@@ -67,26 +66,66 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
 
   return (
     <div className="chat-window-shell">
-      {error && <div className="absolute top-0 left-0 right-0 bg-red-100 text-red-600 p-2 text-center text-sm">{error}</div>}
+      {error && <div className="error-banner">{error}</div>}
 
       <div className="chat-window-scroll">
         {messages.map((msg) => {
           const isMine = msg.SenderId === user?._id;
           return (
-            <div key={msg.MessageId} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[70%] p-3 rounded-lg ${isMine ? 'bg-blue-500 text-white rounded-br-none' : 'bg-white border rounded-bl-none'}`}>
+            <div
+              key={msg.MessageId}
+              className={`msg-row ${isMine ? 'is-mine' : 'is-other'}`}
+            >
+              {/* Avatar placeholder on mine side */}
+              {isMine ? (
+                <div className="msg-avatar-placeholder" />
+              ) : (
+                <div className="msg-avatar">
+                  U
+                </div>
+              )}
+
+              <div className="msg-bubble-wrap">
+                {/* Image attachment */}
                 {msg.MessageType === 'image' && msg.FileName && (
-                  <img src={msg.FileName} alt="attachment" className="max-w-full h-auto rounded mb-2" />
+                  <img
+                    src={msg.FileName}
+                    alt="attachment"
+                    style={{ maxWidth: '100%', borderRadius: '12px', marginBottom: '4px' }}
+                  />
                 )}
+                {/* File attachment */}
                 {msg.MessageType === 'file' && msg.FileName && (
-                  <a href={msg.FileName} target="_blank" rel="noreferrer" className="underline mb-2 block">
-                    Tải file đính kèm
+                  <a
+                    href={msg.FileName}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '4px',
+                      color: isMine ? 'rgba(255,255,255,0.85)' : 'var(--primary)',
+                      fontSize: '13px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    📄 Tải file đính kèm
                   </a>
                 )}
-                <p>{msg.Content}</p>
-                <span className="text-xs opacity-70 mt-1 block text-right">
-                  {new Date(msg.CreatedAt).toLocaleTimeString()}
-                </span>
+
+                <div className="msg-bubble">
+                  <p style={{ margin: 0 }}>{msg.Content}</p>
+                  <span
+                    className="msg-time"
+                    style={{ color: isMine ? 'rgba(255,255,255,0.55)' : 'var(--text-muted)' }}
+                  >
+                    {new Date(msg.CreatedAt).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
           );
@@ -94,7 +133,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {isTyping && <div className="chat-typing-indicator">Đang nhập...</div>}
+      {isTyping && (
+        <div className="chat-typing-indicator">
+          <div className="typing-dots">
+            <span /><span /><span />
+          </div>
+          Đang nhập...
+        </div>
+      )}
 
       <MessageInput conversationId={conversationId} />
     </div>

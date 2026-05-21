@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Message } from '../../types/message.type';
-import './ChatMess.css';
 
 interface MessageItemProps {
   message: Message;
@@ -9,34 +8,62 @@ interface MessageItemProps {
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine }) => {
   return (
-    <div className={`flex w-full mb-4 ${isMine ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[70%] p-3 rounded-lg shadow-sm ${
-        isMine ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none'
-      }`}>
+    <div className={`msg-row ${isMine ? 'is-mine' : 'is-other'}`}>
+      {/* Avatar placeholder / spacing */}
+      <div className="msg-avatar-placeholder" />
+
+      <div className="msg-bubble-wrap">
         {/* Render Hình ảnh */}
         {message.MessageType === 'image' && message.FileName && (
-          <img src={message.FileName} alt="Đính kèm" className="max-w-full h-auto rounded mb-2 object-cover" />
+          <img
+            src={message.FileName}
+            alt="Đính kèm"
+            style={{
+              maxWidth: '100%',
+              borderRadius: '12px',
+              marginBottom: '4px',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
         )}
-        
+
         {/* Render File */}
         {message.MessageType === 'file' && message.FileName && (
-          <a 
-            href={message.FileName} 
-            target="_blank" 
-            rel="noreferrer" 
-            className="flex items-center gap-2 mb-2 p-2 bg-black bg-opacity-10 rounded hover:bg-opacity-20 transition"
+          <a
+            href={message.FileName}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '6px',
+              padding: '8px 12px',
+              background: 'rgba(0,0,0,0.15)',
+              borderRadius: '10px',
+              color: isMine ? 'rgba(255,255,255,0.85)' : 'var(--primary)',
+              fontSize: '13px',
+              textDecoration: 'none',
+              transition: 'opacity 0.2s',
+            }}
           >
-            📄 <span className="truncate underline text-sm">Tải file đính kèm</span>
+            📄 <span style={{ textDecoration: 'underline' }}>Tải file đính kèm</span>
           </a>
         )}
-        
+
         {/* Nội dung text */}
-        {message.Content && <p className="whitespace-pre-wrap word-break">{message.Content}</p>}
-        
-        {/* Thời gian */}
-        <span className={`text-[10px] block mt-1 ${isMine ? 'text-blue-100 text-right' : 'text-gray-400 text-left'}`}>
-          {new Date(message.CreatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </span>
+        <div className="msg-bubble">
+          {message.Content && (
+            <p style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {message.Content}
+            </p>
+          )}
+          {/* Thời gian */}
+          <span className="msg-time">
+            {new Date(message.CreatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -10,6 +10,9 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
 }
 
+/** Tạo màu gradient theo tên (giống Telegram) */
+const getAvatarChar = (name: string) => name?.charAt(0).toUpperCase() || '?';
+
 export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelectConversation }) => {
   const { user } = useAuthStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -30,47 +33,66 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
   }, []);
 
   return (
-    <div className="w-full md:w-80 border-r bg-white flex flex-col h-full">
+    <div className="sidebar-container">
       {/* Profile Header */}
-      <div className="p-4 border-b bg-gray-50 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">
-          {user?.fullName?.charAt(0).toUpperCase()}
+      <div className="sidebar-profile">
+        <div className="sidebar-avatar">
+          {getAvatarChar(user?.fullName || '')}
         </div>
-        <div className="flex-1">
-          <h3 className="font-bold text-gray-800 text-sm truncate">{user?.fullName}</h3>
-          <span className="text-xs text-green-500">Trực tuyến</span>
+        <div className="sidebar-user-info">
+          <div className="sidebar-user-name">{user?.fullName}</div>
+          <div className="sidebar-user-status">Trực tuyến</div>
         </div>
       </div>
 
       {/* Search Input */}
-      <div className="p-3 border-b">
-        <SearchUser onSelectUser={(user) => {
-          //để tạm
-          console.log("Selected user from search:", user);
-        }} />
+      <div className="sidebar-search-wrap">
+        <div className="search-wrap-inner">
+          <span className="search-icon">🔍</span>
+          <SearchUser onSelectUser={(u) => {
+            //để tạm
+            console.log("Selected user from search:", u);
+          }} />
+        </div>
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto">
-        {error && <div className="p-3 text-red-500 text-xs text-center">{error}</div>}
-        
+      <div className="sidebar-list">
+        {error && (
+          <div style={{ padding: '12px 16px', color: '#fca5a5', fontSize: '13px', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
+
         {conversations.length === 0 && !error ? (
-          <div className="p-4 text-center text-gray-400 text-sm">Chưa có tin nhắn nào</div>
+          <div className="sidebar-empty">
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🗨️</div>
+            Chưa có tin nhắn nào
+          </div>
         ) : (
-          <ul>
-            {conversations.map((conv) => (
-              <li 
-                key={conv.ConversationId}
-                onClick={() => onSelectConversation(conv.ConversationId)}
-                className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition ${
-                  activeConversationId === conv.ConversationId ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                }`}
-              >
-                <h4 className="font-semibold text-gray-800 text-sm truncate">{conv.ChatName}</h4>
-                {/* Ở đây có thể render LatestMessage nếu API trả về chi tiết LatestMessage */}
-              </li>
-            ))}
-          </ul>
+          <>
+            <div className="sidebar-section-label">Tin nhắn</div>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {conversations.map((conv) => (
+                <li
+                  key={conv.ConversationId}
+                  id={`conv-${conv.ConversationId}`}
+                  onClick={() => onSelectConversation(conv.ConversationId)}
+                  className={`sidebar-conv-item${activeConversationId === conv.ConversationId ? ' active' : ''}`}
+                >
+                  <div className="conv-avatar">
+                    {getAvatarChar(conv.ChatName)}
+                  </div>
+                  <div className="conv-info">
+                    <div className="conv-name">{conv.ChatName}</div>
+                    <div className="conv-preview">
+                      {conv.IsGroupChat ? '👥 Nhóm trò chuyện' : 'Nhấn để xem tin nhắn'}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </div>

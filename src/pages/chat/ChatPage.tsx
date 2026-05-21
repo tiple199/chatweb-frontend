@@ -7,7 +7,6 @@ import { useAuthStore } from '../../store/auth.store';
 import type { Conversation } from '../../types/conversation.type';
 import { conversationApi } from '../../api/conversation.api';
 import { authApi } from '../../api/auth.api';
-import './ChatPage.css';
 
 export const ChatPage: React.FC = () => {
   const { logout } = useAuthStore();
@@ -52,7 +51,7 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="chat-layout">
       {/* Cột trái: Sidebar chứa danh sách chat */}
       <Sidebar 
         activeConversationId={activeConversationId} 
@@ -60,26 +59,28 @@ export const ChatPage: React.FC = () => {
       />
 
       {/* Cột phải: Khu vực làm việc chính */}
-      <div className="flex-1 flex flex-col relative">
+      <div className="chat-main-container">
         {/* Header trên cùng (Hiển thị tên người đang chat / tên nhóm) */}
         <ChatHeader conversation={activeConversation} />
 
         {/* Nội dung bên dưới Header */}
         {activeConversationId ? (
-          <div className="flex-1 overflow-hidden">
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Truyền ID cuộc trò chuyện xuống để render tin nhắn */}
             <ChatWindow conversationId={activeConversationId} />
           </div>
         ) : (
           /* Màn hình chờ khi chưa chọn cuộc trò chuyện nào */
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
-            <div className="text-6xl mb-4">💬</div>
-            <h2 className="text-xl font-semibold text-gray-700">Chào mừng đến với hệ thống Chat</h2>
-            <p className="text-gray-500 mt-2">Chọn một cuộc trò chuyện bên trái để bắt đầu nhắn tin</p>
-            
+          <div className="chat-empty-state">
+            <div className="empty-icon-wrap">💬</div>
+            <h2 className="empty-title">Bắt đầu trò chuyện</h2>
+            <p className="empty-subtitle">
+              Chọn một cuộc trò chuyện bên trái hoặc tìm kiếm người dùng để nhắn tin
+            </p>
             <button 
+              id="logout-btn"
               onClick={handleLogout} 
-              className="mt-6 px-4 py-2 bg-red-100 text-red-600 font-medium rounded hover:bg-red-200 transition focus:outline-none focus:ring-2 focus:ring-red-400"
+              className="logout-btn"
             >
               Đăng xuất
             </button>
