@@ -6,7 +6,7 @@ import { useSocket } from '../../hooks/useSocket';
 import { useAuthStore } from '../../store/auth.store';
 import MessageInput from './MessageInput';
 import { mapBackendMessage, mapBackendMessages, type BackendMessage } from '../../lib/messageMapper';
-import './ChatMess.css'
+import { MessageItem } from './MessageItem';
 
 interface ChatWindowProps {
   conversationId: string;
@@ -39,26 +39,38 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   }, [conversationId]);
 
   useEffect(() => {
-    onMessageReceived((newMessage: BackendMessage) => {
+    const cleanup = onMessageReceived((newMessage: BackendMessage) => {
       const mappedMessage = mapBackendMessage(newMessage);
       if (mappedMessage.ConversationId === conversationId) {
-        setMessages((prev) => [...prev, mappedMessage]);
+        setMessages((prev) => {
+          if (prev.some((msg) => msg.MessageId === mappedMessage.MessageId)) {
+            return prev;
+          }
+          return [...prev, mappedMessage];
+        });
       }
     });
+
+    return cleanup;
   }, [conversationId, onMessageReceived]);
 
   useEffect(() => {
-    onTyping((payload) => {
+    const cleanupTyping = onTyping((payload) => {
       if (payload.roomId === conversationId) {
         setIsTyping(true);
       }
     });
 
-    onStopTyping((payload) => {
+    const cleanupStopTyping = onStopTyping((payload) => {
       if (payload.roomId === conversationId) {
         setIsTyping(false);
       }
     });
+
+    return () => {
+      cleanupTyping();
+      cleanupStopTyping();
+    };
   }, [conversationId, onTyping, onStopTyping]);
 
   useEffect(() => {
@@ -66,35 +78,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   }, [messages]);
 
   return (
-    <div className="chat-window-shell">
-      {error && <div className="absolute top-0 left-0 right-0 bg-red-100 text-red-600 p-2 text-center text-sm">{error}</div>}
+    <div className="absolute inset-0 flex flex-col bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-50/50">
+      {error && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-medium shadow-md border border-red-200">{error}</div>}
 
-      <div className="chat-window-scroll">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pt-8 pb-28 custom-scrollbar">
         {messages.map((msg) => {
           const isMine = msg.SenderId === user?._id;
-          return (
-            <div key={msg.MessageId} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[70%] p-3 rounded-lg ${isMine ? 'bg-blue-500 text-white rounded-br-none' : 'bg-white border rounded-bl-none'}`}>
-                {msg.MessageType === 'image' && msg.FileName && (
-                  <img src={msg.FileName} alt="attachment" className="max-w-full h-auto rounded mb-2" />
-                )}
-                {msg.MessageType === 'file' && msg.FileName && (
-                  <a href={msg.FileName} target="_blank" rel="noreferrer" className="underline mb-2 block">
-                    Tải file đính kèm
-                  </a>
-                )}
-                <p>{msg.Content}</p>
-                <span className="text-xs opacity-70 mt-1 block text-right">
-                  {new Date(msg.CreatedAt).toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-          );
+          // Show date separator logically... (simplified for now)
+          return <MessageItem key={msg.MessageId} message={msg} isMine={isMine} />;
         })}
-        <div ref={messagesEndRef} />
+        
+        {isTyping && (
+          <div className="flex items-center gap-3 mt-4 animate-fade-in-up">
+            <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse"></div>
+            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5 items-center">
+              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
+              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} className="h-4" />
       </div>
-
-      {isTyping && <div className="chat-typing-indicator">Đang nhập...</div>}
 
       <MessageInput conversationId={conversationId} />
     </div>

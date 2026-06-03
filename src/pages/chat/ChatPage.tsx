@@ -1,89 +1,151 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { Sidebar } from '../../components/chat/Sidebar';
 import { ChatWindow } from '../../components/chat/ChatWindow';
 import { ChatHeader } from '../../components/chat/ChatHeader';
-import { useAuthStore } from '../../store/auth.store';
 import type { Conversation } from '../../types/conversation.type';
 import { conversationApi } from '../../api/conversation.api';
-import { authApi } from '../../api/auth.api';
-import './ChatPage.css';
+import { AddMemberModal } from '../../components/chat/modals/AddMemberModal';
+import { NotesModal } from '../../components/chat/modals/NotesModal';
+import { PollsModal } from '../../components/chat/modals/PollsModal';
+import { UserProfileView } from '../../components/chat/UserProfileView';
+import { ChatInfoDrawer } from '../../components/chat/ChatInfoDrawer';
+import { MessageSearch } from '../../components/chat/MessageSearch';
+import type { User } from '../../types/user.type';
+import { mapBackendConversations } from '../../lib/conversationMapper';
 
 export const ChatPage: React.FC = () => {
-  const { logout } = useAuthStore();
   const [activeConversationId, setActiveConversationId] = useState<string | undefined>();
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  // Hàm xử lý khi người dùng click chọn một cuộc trò chuyện ở Sidebar
-  const handleSelectConversation = async (id: string) => {
-    setActiveConversationId(id);
+  // Modals state
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [isPollsOpen, setIsPollsOpen] = useState(false);
+  
+  // Custom Drawers / Popups
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  
+  // Stranger Profile state
+  const [selectedStranger, setSelectedStranger] = useState<User | null>(null);
+  const [strangerChatUser, setStrangerChatUser] = useState<User | null>(null);
+
+  const loadConversations = async () => {
     try {
-      const res = await conversationApi.getConversations(); 
-      const current = res.data.find(c => c.ConversationId === id);
-      if (current) {
-        setActiveConversation(current);
-      }
+      const res = await conversationApi.getConversations();
+      const rawData = (res.data as any).data || res.data || [];
+      const convs = mapBackendConversations(rawData);
+      setConversations(convs);
+      return convs;
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        console.error("Lỗi khi tải thông tin cuộc trò chuyện:", err.response?.data?.message || err.message);
-      } else {
-        console.error("Lỗi không xác định khi tải cuộc trò chuyện.");
+        const message = err.response?.data?.message || err.message;
+        console.error('Lỗi khi tải danh sách cuộc trò chuyện:', message);
       }
+      return [] as Conversation[];
     }
   };
 
-  // Hàm xử lý đăng xuất an toàn
-  const handleLogout = async () => {
-    // Lấy token từ localStorage (hoặc store) để gửi lên backend hủy phiên làm việc
-    const refreshToken = localStorage.getItem('refreshToken') || ''; 
-    
-    try {
-      if (refreshToken) { 
-        await authApi.logout({ refreshToken });
-      }
-    } catch (err: unknown) {
-      if (err instanceof AxiosError) {
-        console.error("Lỗi gọi API đăng xuất:", err.response?.data?.message || err.message);
-      }
-    } finally {
-      // Đảm bảo luôn xóa thông tin user ở frontend cho dù gọi API có lỗi hay không
-      logout(); 
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  const handleSelectConversation = async (id: string) => {
+    setActiveConversationId(id);
+    setSelectedStranger(null); // Tắt profile người lạ khi chọn chat
+    setStrangerChatUser(null);
+
+    let currentConversation = conversations.find((c) => c.ConversationId === id);
+    if (!currentConversation) {
+      const convs = await loadConversations();
+      currentConversation = convs.find((c) => c.ConversationId === id) || null;
     }
+
+    setActiveConversation(currentConversation || null);
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      {/* Cột trái: Sidebar chứa danh sách chat */}
+    <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
       <Sidebar 
         activeConversationId={activeConversationId} 
-        onSelectConversation={handleSelectConversation} 
+        onSelectConversation={handleSelectConversation}
+        onSelectStranger={(user) => {
+          setSelectedStranger(user);
+          setStrangerChatUser(null);
+          setActiveConversationId(undefined); // Tắt chat hiện tại
+          setActiveConversation(null);
+        }}
       />
 
-      {/* Cột phải: Khu vực làm việc chính */}
-      <div className="flex-1 flex flex-col relative">
-        {/* Header trên cùng (Hiển thị tên người đang chat / tên nhóm) */}
-        <ChatHeader conversation={activeConversation} />
+      <div className="flex-1 flex flex-col relative bg-slate-50">
+        <ChatHeader 
+          conversation={activeConversation} 
+          strangerUser={selectedStranger || strangerChatUser}
+          onOpenAddMember={() => setIsAddMemberOpen(true)}
+          onOpenNotes={() => setIsNotesOpen(true)}
+          onOpenPolls={() => setIsPollsOpen(true)}
+          onToggleSearch={() => setIsSearchOpen(!isSearchOpen)}
+          onToggleInfo={() => setIsInfoOpen(!isInfoOpen)}
+          isSearchOpen={isSearchOpen}
+          isInfoOpen={isInfoOpen}
+        />
+        
+        {isSearchOpen && activeConversationId && (
+          <div className="absolute top-16 right-0 z-30 mr-4 mt-2">
+            <MessageSearch conversationId={activeConversationId} onClose={() => setIsSearchOpen(false)} />
+          </div>
+        )}
 
-        {/* Nội dung bên dưới Header */}
-        {activeConversationId ? (
-          <div className="flex-1 overflow-hidden">
-            {/* Truyền ID cuộc trò chuyện xuống để render tin nhắn */}
-            <ChatWindow conversationId={activeConversationId} />
+        {selectedStranger ? (
+          <UserProfileView 
+            user={selectedStranger} 
+            onClose={() => setSelectedStranger(null)}
+            onStartChat={(convId) => {
+              setStrangerChatUser(selectedStranger);
+              setSelectedStranger(null);
+              setActiveConversationId(convId);
+            }} 
+          />
+        ) : activeConversationId ? (
+          <div className="flex-1 overflow-hidden relative flex">
+            <div className="flex-1 relative">
+              <ChatWindow conversationId={activeConversationId} />
+            </div>
+            {isInfoOpen && (
+              <ChatInfoDrawer conversationId={activeConversationId} onClose={() => setIsInfoOpen(false)} />
+            )}
           </div>
         ) : (
-          /* Màn hình chờ khi chưa chọn cuộc trò chuyện nào */
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
-            <div className="text-6xl mb-4">💬</div>
-            <h2 className="text-xl font-semibold text-gray-700">Chào mừng đến với hệ thống Chat</h2>
-            <p className="text-gray-500 mt-2">Chọn một cuộc trò chuyện bên trái để bắt đầu nhắn tin</p>
-            
-            <button 
-              onClick={handleLogout} 
-              className="mt-6 px-4 py-2 bg-red-100 text-red-600 font-medium rounded hover:bg-red-200 transition focus:outline-none focus:ring-2 focus:ring-red-400"
-            >
-              Đăng xuất
-            </button>
+          <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 relative">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 mix-blend-multiply pointer-events-none"></div>
+            <div className="w-24 h-24 bg-white shadow-xl shadow-blue-500/10 rounded-full flex items-center justify-center mb-6 relative z-10">
+              <span className="text-5xl">💬</span>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2 relative z-10">Chào mừng bạn trở lại</h2>
+            <p className="text-slate-500 mb-8 relative z-10 font-medium">Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
           </div>
+        )}
+
+        {/* Modals */}
+        {isAddMemberOpen && activeConversationId && (
+          <AddMemberModal 
+            conversationId={activeConversationId} 
+            onClose={() => setIsAddMemberOpen(false)} 
+          />
+        )}
+        {isNotesOpen && activeConversationId && (
+          <NotesModal 
+            conversationId={activeConversationId} 
+            onClose={() => setIsNotesOpen(false)} 
+          />
+        )}
+        {isPollsOpen && activeConversationId && (
+          <PollsModal 
+            conversationId={activeConversationId} 
+            onClose={() => setIsPollsOpen(false)} 
+          />
         )}
       </div>
     </div>

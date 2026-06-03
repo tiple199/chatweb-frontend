@@ -7,11 +7,11 @@ export const conversationApi = {
   
   // Tạo chat 1-1
   createDirectChat: (targetUserId:string) => 
-    api.post<Conversation>('/conversations/direct', { targetUserId }),
+    api.post<Conversation>('/conversations', { targetUserId }),
     
   // Tạo chat nhóm
   createGroupChat: (chatName: string, userIds:string[]) => 
-    api.post<Conversation>('/conversations/group', { ChatName: chatName, UserIds: userIds }),
+    api.post<Conversation>('/conversations/group', { chatName: chatName, users: userIds }),
 
   // Cập nhật tên nhóm, v.v.
   updateConversation: (id:string, data: Partial<Conversation>) => 
@@ -25,9 +25,9 @@ export const participantApi = {
     
   // Thêm thành viên vào nhóm
   addMember: (conversationId:string, userId:string) => 
-    api.post<ConversationParticipant>(`/conversations/${conversationId}/participants`, { UserId: userId }),
+    api.post<ConversationParticipant>(`/conversations/${conversationId}/participants`, { userId }),
     
   // Xóa thành viên (Admin xóa)
   removeMember: (conversationId:string, userId:string, removeByUserId:string) => 
-    api.delete(`/conversations/${conversationId}/participants/${userId}`, { data: { RemoveBy: removeByUserId } }),
+    api.delete(`/conversations/${conversationId}/participants/${userId}`, { data: { removeBy: removeByUserId } }),
 };

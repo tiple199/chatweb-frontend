@@ -43,7 +43,7 @@ export const Poll: React.FC<PollProps> = ({ conversationId }) => {
           <h4 className="font-bold">{poll.Question}</h4>
           <div className="mt-2 space-y-2">
             {poll.Options.map(opt => {
-              const hasVoted = opt.VoterIds.includes(user?.UserId || 0);
+              const hasVoted = opt.VoterIds.includes(Number(user?._id) || 0);
               return (
                 <button 
                   key={opt.OptionId}

@@ -15,16 +15,17 @@ export interface ParticipantUpdateData {
 export interface UseSocketReturn {
   socket: Socket | null;
   sendRealtimeMessage: (message: Message) => void;
-  onMessageReceived: (callback: (msg: BackendMessage) => void) => void;
-  onTyping: (callback: (payload: { roomId: string; fromSocketId: string }) => void) => void;
-  onStopTyping: (callback: (payload: { roomId: string; fromSocketId: string }) => void) => void;
-  onParticipantsUpdated: (callback: (data: ParticipantUpdateData) => void) => void;
+  onMessageReceived: (callback: (msg: BackendMessage) => void) => () => void;
+  onTyping: (callback: (payload: { roomId: string; fromSocketId: string }) => void) => () => void;
+  onStopTyping: (callback: (payload: { roomId: string; fromSocketId: string }) => void) => () => void;
+  onParticipantsUpdated: (callback: (data: ParticipantUpdateData) => void) => () => void;
 }
 
 export const useSocket = (activeConversationId?: string): UseSocketReturn => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const { user } = useAuthStore();
   const socketRef = useRef<Socket | null>(null);
+  const previousRoomIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!user) return;
@@ -42,19 +43,37 @@ export const useSocket = (activeConversationId?: string): UseSocketReturn => {
       chatSocket.connect();
     } else {
       setSocket(chatSocket);
-    } 
+    }
 
     return () => {
       chatSocket.off('connect', handleConnect);
+      if (previousRoomIdRef.current) {
+        chatSocket.emit('leave_room', { roomId: previousRoomIdRef.current });
+      }
       socketRef.current = null;
-      setSocket(null); 
+      setSocket(null);
     };
   }, [user]);
 
   useEffect(() => {
-    if (socket && activeConversationId) {
+    if (!socket) return;
+
+    const previousRoomId = previousRoomIdRef.current;
+    if (previousRoomId && previousRoomId !== activeConversationId) {
+      socket.emit('leave_room', { roomId: previousRoomId });
+    }
+
+    if (activeConversationId) {
       socket.emit('join_room', { roomId: activeConversationId });
     }
+
+    previousRoomIdRef.current = activeConversationId;
+
+    return () => {
+      if (activeConversationId) {
+        socket.emit('leave_room', { roomId: activeConversationId });
+      }
+    };
   }, [socket, activeConversationId]);
 
   const sendRealtimeMessage = useCallback((message: Message) => {
@@ -67,34 +86,42 @@ export const useSocket = (activeConversationId?: string): UseSocketReturn => {
 
   const onMessageReceived = useCallback((callback: (msg: BackendMessage) => void) => {
     const currentSocket = socketRef.current;
-    if (!currentSocket) return;
+    if (!currentSocket) return () => {};
 
-    currentSocket.off('receive_message'); 
     currentSocket.on('receive_message', callback);
+    return () => currentSocket.off('receive_message', callback);
   }, []);
 
   const onTyping = useCallback((callback: (payload: { roomId: string; fromSocketId: string }) => void) => {
     const currentSocket = socketRef.current;
-    if (!currentSocket) return;
+    if (!currentSocket) return () => {};
 
-    currentSocket.off('typing');
     currentSocket.on('typing', callback);
+    return () => currentSocket.off('typing', callback);
   }, []);
 
   const onStopTyping = useCallback((callback: (payload: { roomId: string; fromSocketId: string }) => void) => {
     const currentSocket = socketRef.current;
-    if (!currentSocket) return;
+    if (!currentSocket) return () => {};
 
-    currentSocket.off('stop_typing');
     currentSocket.on('stop_typing', callback);
+    return () => currentSocket.off('stop_typing', callback);
   }, []);
 
   const onParticipantsUpdated = useCallback((callback: (data: ParticipantUpdateData) => void) => {
     const currentSocket = socketRef.current;
-    if (!currentSocket) return;
+    if (!currentSocket) return () => {};
 
-    currentSocket.off('participants_updated');
     currentSocket.on('participants_updated', callback);
+    return () => currentSocket.off('participants_updated', callback);
+  }, []);
+
+  const onEvent = useCallback((eventName: string, callback: (...args: any[]) => void) => {
+    const currentSocket = socketRef.current;
+    if (!currentSocket) return () => {};
+
+    currentSocket.on(eventName, callback);
+    return () => currentSocket.off(eventName, callback);
   }, []);
 
   return {
@@ -103,6 +130,7 @@ export const useSocket = (activeConversationId?: string): UseSocketReturn => {
     onMessageReceived,
     onTyping,
     onStopTyping,
-    onParticipantsUpdated
+    onParticipantsUpdated,
+    onEvent,
   };
 };

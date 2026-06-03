@@ -7,32 +7,34 @@ export function useAuth() {
   const loginHandler = async (data: LoginPayload) => {
     // MOCK
     setAuth({
-      UserId: 1,
-      FullName: "User Demo",
-      Email: data.email,
-      Avatar: "",
-      IsOnline: true,
-      LastActive: new Date().toISOString(),
-      Role: "user",
-      IsActive: true,
-      CreateAt: new Date().toISOString(),
-      UpdatedAt: new Date().toISOString(),
+      _id: "1",
+      fullName: "User Demo",
+      email: data.email,
+      isVerified: true,
+      avatar: "",
+      isOnline: true,
+      lastActive: new Date().toISOString(),
+      role: "user",
+      isActive: true,
+      createAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }, "mock-token");
   };
 
   const registerHandler = async (data: RegisterPayload) => {
     // MOCK
     setAuth({
-      UserId: 1,
-      FullName: data.fullName,
-      Email: data.email,
-      Avatar: "",
-      IsOnline: true,
-      LastActive: new Date().toISOString(),
-      Role: "user",
-      IsActive: true,
-      CreateAt: new Date().toISOString(),
-      UpdatedAt: new Date().toISOString(),
+      _id: "1",
+      fullName: data.fullName,
+      email: data.email,
+      isVerified: true,
+      avatar: "",
+      isOnline: true,
+      lastActive: new Date().toISOString(),
+      role: "user",
+      isActive: true,
+      createAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }, "mock-token");
   };
 

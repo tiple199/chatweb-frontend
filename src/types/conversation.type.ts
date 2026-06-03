@@ -7,14 +7,18 @@ export interface Conversation {
   CreateAt: string;
   UpdatedAt: string;
   IsActive: boolean;
+  OtherUserId?: string;
 }
 
 export interface ConversationParticipant {
-  ConversationId: string;
-  UserId: string;
-  JoinedAt: string;
-  Role: string; // enum (vd: 'admin', 'member')
-  IsActive: boolean;
+  ConversationId?: string;
+  UserId?: string;
+  userId?: string;
+  fullName?: string;
+  JoinedAt?: string;
+  Role?: string;
+  role?: string;
+  IsActive?: boolean;
   LeftAt?: string;
   RemoveBy?: string; // Người thực hiện xóa
 }

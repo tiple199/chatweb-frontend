@@ -31,7 +31,7 @@ export const GroupMembers: React.FC<GroupMembersProps> = ({ conversationId }) =>
     if (!user) return;
     try {
       await participantApi.removeMember(conversationId, userId, user._id);
-      setMembers(members.filter(m => m.UserId !== userId));
+      setMembers(members.filter(m => m.userId !== userId));
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
         alert(err.response?.data?.message || "Không có quyền hoặc lỗi hệ thống");
@@ -45,11 +45,11 @@ export const GroupMembers: React.FC<GroupMembersProps> = ({ conversationId }) =>
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       <ul>
         {members.map(member => (
-          <li key={member.UserId} className="flex justify-between items-center mb-2 text-sm">
-            <span>User ID: {member.UserId} - {member.Role}</span>
-            {member.Role !== 'admin' && (
+          <li key={member.userId} className="flex justify-between items-center mb-2 text-sm">
+            <span>{member.fullName} - {member.role}</span>
+            {member.role !== 'admin' && (
               <button 
-                onClick={() => handleRemove(member.UserId)}
+                onClick={() => handleRemove(member.userId)}
                 className="text-red-500 hover:underline"
               >
                 Xóa

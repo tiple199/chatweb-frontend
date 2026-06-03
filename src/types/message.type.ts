@@ -2,8 +2,14 @@ export interface Message {
   MessageId: string;
   ConversationId: string;
   SenderId: string;
-  MessageType: string; // 'text', 'image', 'file'
+  Sender?: {
+    _id: string;
+    fullName: string;
+    avatar: string | null;
+  };
+  MessageType: string; // 'text', 'image', 'video', 'file'
   Content: string;
+  FileUrl?: string;
   FileName?: string;
   FileSize?: number;
   MimeType?: string;
