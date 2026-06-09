@@ -1,18 +1,23 @@
 import React from 'react';
 import type { Message } from '../../types/message.type';
+import { normalizeAvatarUrl, normalizeMediaUrl } from '../../lib/utils';
 
 interface MessageItemProps {
   message: Message;
   isMine: boolean;
+  onOpenMedia?: (payload: { url: string; type: string }) => void;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, onOpenMedia }) => {
+  const senderAvatar = normalizeAvatarUrl(message.Sender?.avatar);
+  const mediaUrl = normalizeMediaUrl(message.FileUrl);
+
   return (
     <div className={`flex w-full mb-6 group ${isMine ? 'justify-end' : 'justify-start'}`}>
       {!isMine && (
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex shrink-0 items-center justify-center text-white text-xs font-bold mr-3 mt-auto shadow-sm overflow-hidden">
-          {message.Sender?.avatar ? (
-            <img src={message.Sender.avatar} alt={message.Sender.fullName} className="w-full h-full object-cover" />
+          {senderAvatar ? (
+            <img src={senderAvatar} alt={message.Sender?.fullName} className="w-full h-full object-cover" />
           ) : (
             message.Sender?.fullName ? message.Sender.fullName[0].toUpperCase() : 'U'
           )}
@@ -31,19 +36,28 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine }) => 
           
           {message.MessageType === 'image' && message.FileUrl && (
             <div className="mb-2 overflow-hidden rounded-xl border border-black/5">
-              <img src={message.FileUrl} alt="Đính kèm" className="max-w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+              {mediaUrl && (
+                <button
+                  type="button"
+                  onClick={() => onOpenMedia?.({ url: mediaUrl, type: 'image' })}
+                  className="block w-full cursor-zoom-in"
+                  title="Phóng to ảnh"
+                >
+                  <img src={mediaUrl} alt="Đính kèm" className="max-w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+                </button>
+              )}
             </div>
           )}
           
           {message.MessageType === 'video' && message.FileUrl && (
             <div className="mb-2 overflow-hidden rounded-xl border border-black/5 bg-black/10">
-              <video src={message.FileUrl} controls className="max-w-full h-auto max-h-[300px]" />
+              {mediaUrl && <video src={mediaUrl} controls className="max-w-full h-auto max-h-[300px]" />}
             </div>
           )}
           
           {message.MessageType === 'file' && message.FileUrl && (
             <a 
-              href={message.FileUrl} 
+              href={mediaUrl || message.FileUrl} 
               target="_blank" 
               rel="noreferrer" 
               className={`flex items-center gap-2 p-2.5 mb-2 rounded-xl transition-colors ${
@@ -72,8 +86,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine }) => 
 
       {isMine && (
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex shrink-0 items-center justify-center text-white text-xs font-bold ml-3 mt-auto shadow-sm overflow-hidden">
-          {message.Sender?.avatar ? (
-            <img src={message.Sender.avatar} alt={message.Sender.fullName} className="w-full h-full object-cover" />
+          {senderAvatar ? (
+            <img src={senderAvatar} alt={message.Sender?.fullName} className="w-full h-full object-cover" />
           ) : (
             message.Sender?.fullName ? message.Sender.fullName[0].toUpperCase() : 'U'
           )}

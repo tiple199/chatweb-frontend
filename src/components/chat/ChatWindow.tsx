@@ -7,6 +7,12 @@ import { useAuthStore } from '../../store/auth.store';
 import MessageInput from './MessageInput';
 import { mapBackendMessage, mapBackendMessages, type BackendMessage } from '../../lib/messageMapper';
 import { MessageItem } from './MessageItem';
+import { MediaLightbox } from './MediaLightbox';
+
+type OpenMediaState = {
+  url: string;
+  type: string;
+} | null;
 
 interface ChatWindowProps {
   conversationId: string;
@@ -17,6 +23,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string>('');
   const [isTyping, setIsTyping] = useState(false);
+  const [openMedia, setOpenMedia] = useState<OpenMediaState>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { onMessageReceived, onTyping, onStopTyping } = useSocket(conversationId);
@@ -85,7 +92,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
         {messages.map((msg) => {
           const isMine = msg.SenderId === user?._id;
           // Show date separator logically... (simplified for now)
-          return <MessageItem key={msg.MessageId} message={msg} isMine={isMine} />;
+          return (
+            <MessageItem
+              key={msg.MessageId}
+              message={msg}
+              isMine={isMine}
+              onOpenMedia={(payload) => setOpenMedia(payload)}
+            />
+          );
         })}
         
         {isTyping && (
@@ -102,6 +116,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       </div>
 
       <MessageInput conversationId={conversationId} />
+
+      {openMedia && (
+        <MediaLightbox
+          url={openMedia.url}
+          type={openMedia.type}
+          onClose={() => setOpenMedia(null)}
+        />
+      )}
     </div>
   );
 };

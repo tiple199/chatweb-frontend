@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { Message } from "../../types/message.type";
+import { normalizeMediaUrl } from "../../lib/utils";
 import { messageApi } from "../../api/message.api";
 import { mapBackendMessage } from "../../lib/messageMapper";
 
@@ -102,7 +103,7 @@ export const MessageSearch: React.FC<MessageSearchProps> = ({ conversationId, on
             
             {m.FileName && (
               <a
-                href={m.FileUrl || m.FileName}
+                href={normalizeMediaUrl(m.FileUrl) || m.FileName}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}

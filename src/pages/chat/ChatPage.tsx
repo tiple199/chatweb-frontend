@@ -60,7 +60,7 @@ export const ChatPage: React.FC = () => {
     let currentConversation = conversations.find((c) => c.ConversationId === id);
     if (!currentConversation) {
       const convs = await loadConversations();
-      currentConversation = convs.find((c) => c.ConversationId === id) || null;
+      currentConversation = convs.find((c) => c.ConversationId === id);
     }
 
     setActiveConversation(currentConversation || null);
