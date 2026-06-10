@@ -16,9 +16,11 @@ export interface UseSocketReturn {
   socket: Socket | null;
   sendRealtimeMessage: (message: Message) => void;
   onMessageReceived: (callback: (msg: BackendMessage) => void) => () => void;
-  onTyping: (callback: (payload: { roomId: string; fromSocketId: string }) => void) => () => void;
-  onStopTyping: (callback: (payload: { roomId: string; fromSocketId: string }) => void) => () => void;
+  onTyping: (callback: (payload: { roomId: string; fromSocketId: string; userId?: string }) => void) => () => void;
+  onStopTyping: (callback: (payload: { roomId: string; fromSocketId: string; userId?: string }) => void) => () => void;
+  onMessagesRead: (callback: (payload: { conversationId: string; userId: string }) => void) => () => void;
   onParticipantsUpdated: (callback: (data: ParticipantUpdateData) => void) => () => void;
+  onEvent: (eventName: string, callback: (...args: any[]) => void) => () => void;
 }
 
 export const useSocket = (activeConversationId?: string): UseSocketReturn => {
@@ -92,7 +94,7 @@ export const useSocket = (activeConversationId?: string): UseSocketReturn => {
     return () => currentSocket.off('receive_message', callback);
   }, []);
 
-  const onTyping = useCallback((callback: (payload: { roomId: string; fromSocketId: string }) => void) => {
+  const onTyping = useCallback((callback: (payload: { roomId: string; fromSocketId: string; userId?: string }) => void) => {
     const currentSocket = socketRef.current;
     if (!currentSocket) return () => {};
 
@@ -100,12 +102,20 @@ export const useSocket = (activeConversationId?: string): UseSocketReturn => {
     return () => currentSocket.off('typing', callback);
   }, []);
 
-  const onStopTyping = useCallback((callback: (payload: { roomId: string; fromSocketId: string }) => void) => {
+  const onStopTyping = useCallback((callback: (payload: { roomId: string; fromSocketId: string; userId?: string }) => void) => {
     const currentSocket = socketRef.current;
     if (!currentSocket) return () => {};
 
     currentSocket.on('stop_typing', callback);
     return () => currentSocket.off('stop_typing', callback);
+  }, []);
+
+  const onMessagesRead = useCallback((callback: (payload: { conversationId: string; userId: string }) => void) => {
+    const currentSocket = socketRef.current;
+    if (!currentSocket) return () => {};
+
+    currentSocket.on('messages_read', callback);
+    return () => currentSocket.off('messages_read', callback);
   }, []);
 
   const onParticipantsUpdated = useCallback((callback: (data: ParticipantUpdateData) => void) => {
@@ -130,6 +140,7 @@ export const useSocket = (activeConversationId?: string): UseSocketReturn => {
     onMessageReceived,
     onTyping,
     onStopTyping,
+    onMessagesRead,
     onParticipantsUpdated,
     onEvent,
   };

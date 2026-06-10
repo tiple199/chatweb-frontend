@@ -67,7 +67,7 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen overflow-hidden font-sans chat-mesh-bg">
       <Sidebar 
         activeConversationId={activeConversationId} 
         onSelectConversation={handleSelectConversation}
@@ -79,7 +79,7 @@ export const ChatPage: React.FC = () => {
         }}
       />
 
-      <div className="flex-1 flex flex-col relative bg-slate-50">
+      <div className="flex-1 flex flex-col relative bg-transparent">
         <ChatHeader 
           conversation={activeConversation} 
           strangerUser={selectedStranger || strangerChatUser}
@@ -118,12 +118,11 @@ export const ChatPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 relative">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 mix-blend-multiply pointer-events-none"></div>
-            <div className="w-24 h-24 bg-white shadow-xl shadow-blue-500/10 rounded-full flex items-center justify-center mb-6 relative z-10">
-              <span className="text-5xl">💬</span>
+          <div className="flex-1 flex flex-col items-center justify-center relative">
+            <div className="w-24 h-24 bg-white/60 backdrop-blur-md shadow-xl shadow-indigo-500/10 rounded-full flex items-center justify-center mb-6 relative z-10 border border-white/60 transform transition-transform hover:scale-105">
+              <span className="text-5xl">✨</span>
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2 relative z-10">Chào mừng bạn trở lại</h2>
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 mb-2 relative z-10">Chào mừng bạn trở lại</h2>
             <p className="text-slate-500 mb-8 relative z-10 font-medium">Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
           </div>
         )}
