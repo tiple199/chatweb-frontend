@@ -1,17 +1,18 @@
 import React from 'react';
 import type { Message } from '../../types/message.type';
 import { PollMessageItem } from './PollMessageItem';
+import { normalizeAvatarUrl, normalizeMediaUrl } from '../../lib/utils';
+import { ChatAvatar } from '../ChatAvatar';
 
 interface MessageItemProps {
   message: Message;
   isMine: boolean;
   conversationId?: string;
   readByUsers?: { _id: string; fullName: string; avatar: string | null }[];
+  onOpenMedia?: (payload: { url: string; type: string }) => void;
 }
 
-import { ChatAvatar } from '../ChatAvatar';
-
-export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conversationId, readByUsers = [] }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conversationId, readByUsers = [], onOpenMedia }) => {
   if (message.MessageType === 'system') {
     return (
       <div className="w-full flex justify-center my-3 animate-fade-in-up">
@@ -26,15 +27,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
     return <PollMessageItem pollId={message.Content} conversationId={conversationId || ''} />;
   }
 
+  const senderAvatar = normalizeAvatarUrl(message.Sender?.avatar);
+  const mediaUrl = normalizeMediaUrl(message.FileUrl);
+
   return (
     <div className={`flex w-full mb-6 group animate-fade-in-up ${isMine ? 'justify-end' : 'justify-start'}`}>
       {!isMine && (
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex shrink-0 items-center justify-center text-white text-sm font-bold mr-3 mt-auto shadow-md shadow-indigo-500/20 overflow-hidden ring-2 ring-white">
-          {message.Sender?.avatar ? (
-            <img src={message.Sender.avatar} alt={message.Sender.fullName} className="w-full h-full object-cover" />
-          ) : (
-            message.Sender?.fullName ? message.Sender.fullName[0].toUpperCase() : 'U'
-          )}
+        <div className="mr-3 mt-auto shrink-0 shadow-md shadow-indigo-500/20 ring-2 ring-white rounded-full overflow-hidden">
+          <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
         </div>
       )}
       
@@ -48,21 +48,32 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
             : 'bg-white/80 backdrop-blur-md border border-white/60 text-slate-800 rounded-3xl rounded-bl-sm shadow-lg shadow-slate-200/50'
         }`}>
           
-          {message.MessageType === 'image' && message.FileUrl && (
+          {message.MessageType === 'image' && (message.FileUrl || mediaUrl) && (
             <div className="mb-2 overflow-hidden rounded-2xl border border-black/5 shadow-sm">
-              <img src={message.FileUrl} alt="Đính kèm" className="max-w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+              {mediaUrl && onOpenMedia ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenMedia({ url: mediaUrl, type: 'image' })}
+                  className="block w-full cursor-zoom-in"
+                  title="Phóng to ảnh"
+                >
+                  <img src={mediaUrl} alt="Đính kèm" className="max-w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+                </button>
+              ) : (
+                <img src={mediaUrl || message.FileUrl} alt="Đính kèm" className="max-w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+              )}
             </div>
           )}
           
-          {message.MessageType === 'video' && message.FileUrl && (
+          {message.MessageType === 'video' && (message.FileUrl || mediaUrl) && (
             <div className="mb-2 overflow-hidden rounded-2xl border border-black/5 bg-black/10 shadow-sm">
-              <video src={message.FileUrl} controls className="max-w-full h-auto max-h-[300px]" />
+              <video src={mediaUrl || message.FileUrl} controls className="max-w-full h-auto max-h-[300px]" />
             </div>
           )}
           
-          {message.MessageType === 'file' && message.FileUrl && (
+          {message.MessageType === 'file' && (message.FileUrl || mediaUrl) && (
             <a 
-              href={message.FileUrl} 
+              href={mediaUrl || message.FileUrl} 
               target="_blank" 
               rel="noreferrer" 
               className={`flex items-center gap-3 p-3 mb-2 rounded-2xl transition-colors ${
@@ -120,12 +131,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
       </div>
 
       {isMine && (
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex shrink-0 items-center justify-center text-white text-sm font-bold ml-3 mt-auto shadow-md shadow-indigo-500/20 overflow-hidden ring-2 ring-white">
-          {message.Sender?.avatar ? (
-            <img src={message.Sender.avatar} alt={message.Sender.fullName} className="w-full h-full object-cover" />
-          ) : (
-            message.Sender?.fullName ? message.Sender.fullName[0].toUpperCase() : 'U'
-          )}
+        <div className="ml-3 mt-auto shrink-0 shadow-md shadow-indigo-500/20 ring-2 ring-white rounded-full overflow-hidden">
+          <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
         </div>
       )}
     </div>

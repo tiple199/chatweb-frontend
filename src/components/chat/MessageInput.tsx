@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { AxiosError } from 'axios';
+import { AxiosError, type AxiosProgressEvent } from 'axios';
 import { useSocket } from '../../hooks/useSocket';
 import { messageApi } from '../../api/message.api';
 
@@ -54,11 +54,17 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
     if ((!content.trim() && !file) || isSending) return;
 
     setIsSending(true);
+    setUploadProgress(0);
     try {
       emitStopTyping();
 
       if (file) {
-        await messageApi.sendMessage(conversationId, content.trim(), file);
+        await messageApi.sendMessage(conversationId, content.trim(), file, (progressEvent: AxiosProgressEvent) => {
+          if (!progressEvent.total) return;
+
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percent);
+        });
       } else {
         // Gửi tin nhắn text thường qua Socket (optimistic update)
         sendRealtimeMessage({
@@ -76,6 +82,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
       
       setContent('');
       setFile(null);
+      setUploadProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
@@ -94,6 +101,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
       e.currentTarget.form?.requestSubmit();
     }
   };
+  const showUploadProgress = isSending && file;
 
   return (
     <div className="absolute bottom-6 left-0 right-0 px-4 md:px-8 pointer-events-none z-20">
@@ -131,6 +139,22 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
               </button>
             </div>
           )}
+
+          {showUploadProgress && (
+            <div className="px-3 pt-2">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                <span>Đang tải file lên</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-blue-500 transition-all duration-150 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           <input
             type="text"
             value={content}

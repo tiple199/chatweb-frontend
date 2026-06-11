@@ -12,6 +12,12 @@ import type { GroupNote } from '../../types/group.type';
 import type { ConversationParticipant } from '../../types/conversation.type';
 import { MessageItem } from './MessageItem';
 import { ChatAvatar } from '../ChatAvatar';
+import { MediaLightbox } from './MediaLightbox';
+
+type OpenMediaState = {
+  url: string;
+  type: string;
+} | null;
 
 interface ChatWindowProps {
   conversationId: string;
@@ -24,6 +30,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
   const [latestNote, setLatestNote] = useState<GroupNote | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [openMedia, setOpenMedia] = useState<OpenMediaState>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { onMessageReceived, onTyping, onStopTyping, onMessagesRead } = useSocket(conversationId);
@@ -183,6 +191,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pt-4 pb-32 custom-scrollbar relative z-0">
         {(() => {
           const latestReadIndices: Record<string, number> = {};
+
           messages.forEach((msg, index) => {
             msg.ReadBy?.forEach(reader => {
               if (reader._id !== user?._id) {
@@ -194,14 +203,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
           return messages.map((msg, index) => {
             const isMine = msg.SenderId === user?._id;
             const readByUsers = msg.ReadBy?.filter(r => latestReadIndices[r._id] === index && r._id !== user?._id) || [];
-            
+
             return (
-              <MessageItem 
-                key={msg.MessageId} 
-                message={msg} 
-                isMine={isMine} 
-                conversationId={conversationId} 
+              <MessageItem
+                key={msg.MessageId}
+                message={msg}
+                isMine={isMine}
+                conversationId={conversationId}
                 readByUsers={readByUsers}
+                onOpenMedia={(payload) => setOpenMedia(payload)}
               />
             );
           });
@@ -234,6 +244,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       </div>
 
       <MessageInput conversationId={conversationId} />
+
+      {openMedia && (
+        <MediaLightbox
+          url={openMedia.url}
+          type={openMedia.type}
+          onClose={() => setOpenMedia(null)}
+        />
+      )}
     </div>
   );
 };

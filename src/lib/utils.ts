@@ -16,6 +16,21 @@ export const normalizeAvatarUrl = (url?: string | null): string | null => {
 };
 
 /**
+ * Chuẩn hóa URL media/file từ backend
+ * @param url - URL media từ backend
+ * @returns URL đầy đủ hoặc null
+ */
+export const normalizeMediaUrl = (url?: string | null): string | null => {
+  if (!url || url.trim() === "") return null;
+
+  if (url.startsWith("http")) return url;
+
+  const baseUrl = "http://localhost:5000";
+  const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+  return `${baseUrl}${normalizedUrl}`;
+};
+
+/**
  * Lấy initials từ tên (ví dụ: "Nguyễn Văn Tùng" → "NT")
  * @param fullName - Tên đầy đủ
  * @returns 1-2 ký tự viết hoa

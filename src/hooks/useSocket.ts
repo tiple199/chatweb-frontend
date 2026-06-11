@@ -14,6 +14,7 @@ export interface ParticipantUpdateData {
 
 export interface UseSocketReturn {
   socket: Socket | null;
+  onEvent: (eventName: string, callback: (...args: any[]) => void) => () => void;
   sendRealtimeMessage: (message: Message) => void;
   onMessageReceived: (callback: (msg: BackendMessage) => void) => () => void;
   onTyping: (callback: (payload: { roomId: string; fromSocketId: string; userId?: string }) => void) => () => void;
