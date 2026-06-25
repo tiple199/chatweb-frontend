@@ -10,4 +10,12 @@ export const userApi = {
   searchUsers: (query: string) => 
     api.get<User[]>(`/user/search?query=${encodeURIComponent(query)}`), //[cite: 4]
 
+  // Cập nhật ảnh đại diện
+  updateAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return api.post<{ data: { user: User, upload: any } }>('/user/update-avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

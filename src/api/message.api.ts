@@ -43,4 +43,12 @@ export const messageApi = {
     api.get<Message[]>(`/messages/search`, { 
       params: { ConversationId: conversationId, keyword: query, MessageType: type } 
     }),
+
+  // Sửa tin nhắn
+  editMessage: (messageId: string, content: string) => 
+    api.put<{ data: Message }>(`/messages/${messageId}`, { content }),
+
+  // Xóa/Thu hồi tin nhắn
+  deleteMessage: (messageId: string) => 
+    api.delete<{ data: Message }>(`/messages/${messageId}`),
 };

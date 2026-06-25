@@ -28,7 +28,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   if (!conversation && !strangerUser) {
     return (
-      <div className="h-[72px] border-b border-slate-200/50 glass-panel flex items-center px-6 shadow-sm z-10 sticky top-0">
+      <div className="h-[72px] border-b border-slate-200 bg-white flex items-center px-6 shadow-sm z-10 sticky top-0">
         <span className="text-slate-400 font-medium">Chưa chọn cuộc trò chuyện</span>
       </div>
     );
@@ -39,7 +39,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   const isGroup = conversation ? conversation.IsGroupChat : false;
 
   return (
-    <div className="h-[72px] border-b border-white/40 glass-panel flex items-center justify-between px-6 z-10 sticky top-0">
+    <div className="h-[72px] border-b border-slate-200 bg-white flex items-center justify-between px-6 z-10 sticky top-0">
       <div className="flex items-center gap-4">
         {/* Mobile menu button */}
         <button onClick={onOpenSidebar} className="md:hidden p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
@@ -102,14 +102,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         )}
         <button 
           onClick={onToggleSearch}
-          className={`p-2.5 rounded-full transition-colors ${isSearchOpen ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100/80'}`} 
+          className={`p-2.5 rounded-full transition-colors ${isSearchOpen ? 'bg-slate-100 text-indigo-600' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`} 
           title="Tìm kiếm tin nhắn"
         >
           <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </button>
         <button 
           onClick={onToggleInfo}
-          className={`p-2.5 rounded-full transition-colors ${isInfoOpen ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100/80'}`} 
+          className={`p-2.5 rounded-full transition-colors ${isInfoOpen ? 'bg-slate-100 text-indigo-600' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`} 
           title="Thông tin"
         >
           <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

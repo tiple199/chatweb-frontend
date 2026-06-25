@@ -32,9 +32,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   const [latestNote, setLatestNote] = useState<GroupNote | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [openMedia, setOpenMedia] = useState<OpenMediaState>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
   
-  const { onMessageReceived, onTyping, onStopTyping, onMessagesRead } = useSocket(conversationId);
+  const { onEvent, onMessageReceived, onTyping, onStopTyping, onMessagesRead } = useSocket(conversationId);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -140,11 +143,33 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       }
     });
 
+    const cleanupUpdate = onEvent("message_updated", (payload: any) => {
+      if (payload.conversationId === conversationId) {
+        setMessages(prev => prev.map(msg => 
+          msg.MessageId === payload._id 
+            ? { ...msg, Content: payload.content, UpdatedAt: payload.updatedAt } 
+            : msg
+        ));
+      }
+    });
+
+    const cleanupDelete = onEvent("message_deleted", (payload: any) => {
+      if (payload.conversationId === conversationId) {
+        setMessages(prev => prev.map(msg => 
+          msg.MessageId === payload._id 
+            ? { ...msg, IsDeletedForAll: payload.isDeletedForAll } 
+            : msg
+        ));
+      }
+    });
+
     return () => {
       cleanup();
       cleanupRead();
+      if (cleanupUpdate) cleanupUpdate();
+      if (cleanupDelete) cleanupDelete();
     };
-  }, [conversationId, onMessageReceived, onMessagesRead, participants]);
+  }, [conversationId, onMessageReceived, onMessagesRead, onEvent, participants]);
 
   useEffect(() => {
     const cleanupTyping = onTyping((payload) => {
@@ -169,8 +194,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   }, [conversationId, onTyping, onStopTyping, user]);
 
   useEffect(() => {
+    const isScrolledUp = scrollRef.current 
+      ? scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight > 150
+      : false;
+      
+    const lastMessage = messages[messages.length - 1];
+    const isMyMessage = lastMessage?.SenderId === user?._id;
+
+    if (!isScrolledUp || isMyMessage) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, user]);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    const isScrolledUp = scrollHeight - scrollTop - clientHeight > 100;
+    setShowScrollBottom(isScrolledUp);
+  };
+
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  };
 
   return (
     <div className="absolute inset-0 flex flex-col bg-transparent">
@@ -188,7 +233,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pt-4 pb-32 custom-scrollbar relative z-0">
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 sm:px-8 pt-4 pb-32 custom-scrollbar relative z-0"
+      >
         {(() => {
           const latestReadIndices: Record<string, number> = {};
 
@@ -212,6 +261,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
                 conversationId={conversationId}
                 readByUsers={readByUsers}
                 onOpenMedia={(payload) => setOpenMedia(payload)}
+                onEditMessage={(m) => setEditingMessage(m)}
+                onDeleteMessage={async (m) => {
+                  if (window.confirm("Bạn có chắc chắn muốn thu hồi tin nhắn này không?")) {
+                    try {
+                      await messageApi.deleteMessage(m.MessageId);
+                    } catch (e) {
+                      console.error("Lỗi khi thu hồi tin nhắn", e);
+                    }
+                  }
+                }}
               />
             );
           });
@@ -243,7 +302,38 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
         <div ref={messagesEndRef} className="h-4" />
       </div>
 
-      <MessageInput conversationId={conversationId} />
+      {editingMessage && (
+        <div className="absolute bottom-[90px] left-4 right-4 bg-white p-3 rounded-2xl shadow-lg border border-indigo-100 flex items-center gap-3 z-30 mx-auto max-w-4xl">
+          <div className="flex-1">
+            <p className="text-[12px] font-bold text-indigo-600 mb-1">Đang chỉnh sửa tin nhắn</p>
+            <p className="text-sm text-slate-600 truncate">{editingMessage.Content}</p>
+          </div>
+          <button 
+            onClick={() => setEditingMessage(null)}
+            className="p-1.5 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      )}
+
+      {showScrollBottom && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-28 right-8 bg-indigo-500/90 hover:bg-indigo-600 text-white p-3 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.15)] backdrop-blur-sm transition-all z-20 flex items-center justify-center animate-fade-in-up border border-indigo-400 group"
+          title="Cuộn xuống tin nhắn mới nhất"
+        >
+          <svg className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </button>
+      )}
+
+      <MessageInput 
+        conversationId={conversationId} 
+        editingMessage={editingMessage}
+        onCancelEdit={() => setEditingMessage(null)}
+      />
 
       {openMedia && (
         <MediaLightbox

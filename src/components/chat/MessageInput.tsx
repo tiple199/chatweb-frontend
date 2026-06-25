@@ -3,11 +3,15 @@ import { AxiosError, type AxiosProgressEvent } from 'axios';
 import { useSocket } from '../../hooks/useSocket';
 import { messageApi } from '../../api/message.api';
 
+import type { Message } from '../../types/message.type';
+
 interface MessageInputProps {
   conversationId: string;
+  editingMessage?: Message | null;
+  onCancelEdit?: () => void;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMessage, onCancelEdit }) => {
   const [content, setContent] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -24,6 +28,16 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
     socket?.emit('stop_typing', { roomId: conversationId });
     typingActiveRef.current = false;
   };
+
+  useEffect(() => {
+    if (editingMessage) {
+      setContent(editingMessage.Content);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setFile(null);
+    } else {
+      setContent('');
+    }
+  }, [editingMessage]);
 
   const emitTypingIfNeeded = () => {
     if (!typingActiveRef.current) {
@@ -58,7 +72,10 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
     try {
       emitStopTyping();
 
-      if (file) {
+      if (editingMessage) {
+        await messageApi.editMessage(editingMessage.MessageId, content.trim());
+        if (onCancelEdit) onCancelEdit();
+      } else if (file) {
         await messageApi.sendMessage(conversationId, content.trim(), file, (progressEvent: AxiosProgressEvent) => {
           if (!progressEvent.total) return;
 
@@ -105,15 +122,16 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
 
   return (
     <div className="absolute bottom-6 left-0 right-0 px-4 md:px-8 pointer-events-none z-20">
-      <form onSubmit={handleSend} className="max-w-4xl mx-auto flex items-end gap-3 p-2 bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] rounded-3xl pointer-events-auto transition-all focus-within:shadow-[0_8px_32px_0_rgba(79,70,229,0.15)] focus-within:border-indigo-300 focus-within:bg-white/90">
+      <form onSubmit={handleSend} className="max-w-4xl mx-auto flex items-end gap-2 p-1.5 bg-slate-100 border border-slate-200 rounded-[2rem] pointer-events-auto transition-all focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-300 focus-within:bg-white shadow-sm">
         <input
           type="file"
           ref={fileInputRef}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] || null)}
           className="hidden"
           id="file-upload"
+          disabled={!!editingMessage}
         />
-        <label htmlFor="file-upload" className={`cursor-pointer p-3.5 rounded-full transition-all self-end mb-0.5 ${file ? 'text-indigo-600 bg-indigo-100 shadow-inner' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/80'}`} title="Đính kèm file">
+        <label htmlFor="file-upload" className={`cursor-pointer p-3 rounded-full transition-all self-end mb-0.5 ${!!editingMessage ? 'opacity-50 pointer-events-none text-slate-400' : file ? 'text-indigo-600 bg-indigo-50 shadow-sm ring-1 ring-indigo-100' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-200/50'}`} title="Đính kèm file">
           <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
         </label>
         
@@ -184,7 +202,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) => {
         <button 
           type="submit" 
           disabled={isSending || (!content.trim() && !file)}
-          className="p-3.5 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white rounded-full hover:from-indigo-700 hover:to-purple-700 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 transition-all shadow-md shadow-indigo-500/30 disabled:shadow-none self-end mb-0.5 shrink-0 active:scale-95"
+          className="p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors shadow-sm disabled:shadow-none self-end mb-0.5 shrink-0 active:scale-95"
           title="Gửi"
         >
           {isSending ? (

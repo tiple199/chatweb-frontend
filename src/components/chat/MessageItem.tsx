@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { Message } from '../../types/message.type';
 import { PollMessageItem } from './PollMessageItem';
 import { normalizeAvatarUrl, normalizeMediaUrl } from '../../lib/utils';
@@ -10,9 +10,23 @@ interface MessageItemProps {
   conversationId?: string;
   readByUsers?: { _id: string; fullName: string; avatar: string | null }[];
   onOpenMedia?: (payload: { url: string; type: string }) => void;
+  onEditMessage?: (message: Message) => void;
+  onDeleteMessage?: (message: Message) => void;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conversationId, readByUsers = [], onOpenMedia }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conversationId, readByUsers = [], onOpenMedia, onEditMessage, onDeleteMessage }) => {
+  const [showOptions, setShowOptions] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+        setShowOptions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   if (message.MessageType === 'system') {
     return (
       <div className="w-full flex justify-center my-3 animate-fade-in-up">
@@ -23,17 +37,40 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
     );
   }
 
+  const senderAvatar = normalizeAvatarUrl(message.Sender?.avatar);
+
+  if (message.IsDeletedForAll) {
+    return (
+      <div className={`flex w-full mb-6 animate-fade-in-up ${isMine ? 'justify-end' : 'justify-start'}`}>
+        {!isMine && (
+          <div className="mr-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200">
+            <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
+          </div>
+        )}
+        <div className={`relative max-w-[75%] sm:max-w-[65%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+          <div className="py-2.5 px-4 border border-slate-200 rounded-2xl bg-white text-slate-400 italic text-[14px] shadow-sm">
+            Tin nhắn đã bị thu hồi
+          </div>
+        </div>
+        {isMine && (
+          <div className="ml-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200">
+            <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (message.MessageType === 'poll') {
     return <PollMessageItem pollId={message.Content} conversationId={conversationId || ''} />;
   }
 
-  const senderAvatar = normalizeAvatarUrl(message.Sender?.avatar);
   const mediaUrl = normalizeMediaUrl(message.FileUrl);
 
   return (
     <div className={`flex w-full mb-6 group animate-fade-in-up ${isMine ? 'justify-end' : 'justify-start'}`}>
       {!isMine && (
-        <div className="mr-3 mt-auto shrink-0 shadow-md shadow-indigo-500/20 ring-2 ring-white rounded-full overflow-hidden">
+        <div className="mr-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200">
           <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
         </div>
       )}
@@ -42,11 +79,45 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
         <span className={`text-[11px] text-slate-500 mb-1.5 px-1 font-semibold ${isMine ? 'text-right' : 'text-left'}`}>
           {message.Sender?.fullName || 'Người dùng'}
         </span>
-        <div className={`p-4 shadow-sm relative ${
-          isMine 
-            ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-3xl rounded-br-sm shadow-indigo-500/30 shadow-lg border border-indigo-500/50' 
-            : 'bg-white/80 backdrop-blur-md border border-white/60 text-slate-800 rounded-3xl rounded-bl-sm shadow-lg shadow-slate-200/50'
-        }`}>
+        
+        <div className="relative group/bubble flex items-center">
+          {isMine && (
+            <div className={`absolute right-full mr-2 opacity-0 group-hover/bubble:opacity-100 transition-opacity ${showOptions ? 'opacity-100' : ''}`} ref={optionsRef}>
+              <button 
+                onClick={() => setShowOptions(!showOptions)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
+              </button>
+              
+              {showOptions && (
+                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 w-36 z-50">
+                  {message.MessageType === 'text' && (
+                    <button 
+                      onClick={() => { setShowOptions(false); onEditMessage?.(message); }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      Chỉnh sửa
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => { setShowOptions(false); onDeleteMessage?.(message); }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Thu hồi
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className={`py-2 px-3.5 relative ${
+            isMine 
+              ? 'bg-indigo-600 text-white rounded-2xl rounded-br-sm shadow-sm' 
+              : 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-bl-sm shadow-sm'
+          }`}>
           
           {message.MessageType === 'image' && (message.FileUrl || mediaUrl) && (
             <div className="mb-2 overflow-hidden rounded-2xl border border-black/5 shadow-sm">
@@ -93,11 +164,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
           {/* Nội dung text */}
           {message.Content && <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed tracking-wide">{message.Content}</p>}
         </div>
+        </div>
         
         {/* Thời gian và Trạng thái */}
         <div className={`flex items-center gap-2 mt-2 px-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[10px] font-bold ${
-            isMine ? 'text-indigo-400/80' : 'text-slate-400'
+          <span className={`text-[11px] font-medium ${
+            isMine ? 'text-slate-400' : 'text-slate-400'
           }`}>
             {new Date(message.CreatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
@@ -131,7 +203,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
       </div>
 
       {isMine && (
-        <div className="ml-3 mt-auto shrink-0 shadow-md shadow-indigo-500/20 ring-2 ring-white rounded-full overflow-hidden">
+        <div className="ml-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200">
           <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
         </div>
       )}
