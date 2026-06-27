@@ -14,6 +14,7 @@ import { MessageSearch } from '../../components/chat/MessageSearch';
 import type { User } from '../../types/user.type';
 import { mapBackendConversations } from '../../lib/conversationMapper';
 import { useSocket } from '../../hooks/useSocket';
+import { ChatAvatar } from '../../components/ChatAvatar';
 
 interface ToastNotification {
   id: string;
@@ -258,13 +259,7 @@ export const ChatPage: React.FC = () => {
             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 rounded-l-2xl"></div>
             
             {/* Avatar */}
-            <div className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white font-bold shadow-sm select-none">
-              {toast.senderAvatar ? (
-                <img src={toast.senderAvatar} alt={toast.senderName} className="w-full h-full rounded-full object-cover" />
-              ) : (
-                toast.senderName.charAt(0).toUpperCase()
-              )}
-            </div>
+            <ChatAvatar avatarUrl={toast.senderAvatar} fullName={toast.senderName} size={40} />
 
             {/* Content */}
             <div className="flex-1 min-w-0 pr-4">

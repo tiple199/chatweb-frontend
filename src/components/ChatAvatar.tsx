@@ -18,7 +18,7 @@ export const ChatAvatar = ({ avatarUrl, fullName, size = 40 }: Props) => {
    * Cùng một cái tên sẽ luôn ra một màu nhất định.
    */
   const getTelegramColor = (name: string): string => {
-    // Sử dụng gradient thay vì màu đơn – phù hợp dark theme
+    // Sử dụng gradient thay vì màu đơn – phù hợp dark theme 
     const gradients = [
       "linear-gradient(135deg, #3b82f6, #6366f1)",   // Blue → Indigo
       "linear-gradient(135deg, #10b981, #06b6d4)",   // Emerald → Cyan

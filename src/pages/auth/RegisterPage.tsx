@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { authApi } from '../../api/auth.api';
+import { Eye, EyeOff } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ export const RegisterPage: React.FC = () => {
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   const handleSendOtp = async () => {
     if (!formData.email) {
@@ -134,30 +137,48 @@ export const RegisterPage: React.FC = () => {
               />
             </div>
 
+            
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700 ml-1">Mật khẩu</label>
-              <input
-                name="password"
-                type="password"
-                placeholder="Tối thiểu 8 ký tự"
-                className="w-full px-4 py-3 rounded-2xl glass-input text-slate-800 placeholder:text-slate-400"
-                onChange={handleChange}
-                required
-              />
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Tối thiểu 8 ký tự"
+                  className="w-full px-4 py-3 rounded-2xl glass-input text-slate-800 placeholder:text-slate-400"
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700 ml-1">Xác nhận mật khẩu</label>
-              <input
-                name="confirmPassword"
-                type="password"
-                placeholder="Nhập lại mật khẩu"
-                className="w-full px-4 py-3 rounded-2xl glass-input text-slate-800 placeholder:text-slate-400"
-                onChange={handleChange}
-                required
-              />
+              <div className="relative">
+                <input
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Nhập lại mật khẩu"
+                  className="w-full px-4 py-3 rounded-2xl glass-input text-slate-800 placeholder:text-slate-400"
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
-            
             <button
               type="submit"
               disabled={isLoading}

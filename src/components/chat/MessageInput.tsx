@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState} from 'react';
 import { AxiosError, type AxiosProgressEvent } from 'axios';
 import { useSocket } from '../../hooks/useSocket';
 import { messageApi } from '../../api/message.api';
@@ -51,7 +51,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMess
 
     stopTypingTimeoutRef.current = setTimeout(() => {
       emitStopTyping();
-    }, 1500);
+    }, 150000);
   };
 
   useEffect(() => {

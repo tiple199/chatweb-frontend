@@ -21,7 +21,6 @@ export interface UseSocketReturn {
   onStopTyping: (callback: (payload: { roomId: string; fromSocketId: string; userId?: string }) => void) => () => void;
   onMessagesRead: (callback: (payload: { conversationId: string; userId: string }) => void) => () => void;
   onParticipantsUpdated: (callback: (data: ParticipantUpdateData) => void) => () => void;
-  onEvent: (eventName: string, callback: (...args: any[]) => void) => () => void;
 }
 
 export const useSocket = (activeConversationId?: string): UseSocketReturn => {

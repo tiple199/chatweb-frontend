@@ -18,9 +18,10 @@ interface SidebarProps {
   activeConversationId?: string;
   onSelectConversation: (id: string) => void;
   onSelectStranger?: (user: User) => void;
+  onConversationDeleted?: (id: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelectConversation, onSelectStranger }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelectConversation, onSelectStranger, onConversationDeleted }) => {
   const { user, logout, updateUser } = useAuthStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [error, setError] = useState<string>('');
@@ -32,14 +33,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
   const [isStrangerFolderOpen, setIsStrangerFolderOpen] = useState(false);
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [openConversationMenuId, setOpenConversationMenuId] = useState<string | null>(null);
+  const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const conversationMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
         setIsProfileMenuOpen(false);
+      }
+      if (conversationMenuRef.current && !conversationMenuRef.current.contains(event.target as Node)) {
+        setOpenConversationMenuId(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -112,6 +119,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
       setIsUploadingAvatar(false);
       setIsProfileMenuOpen(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteConversation = async (conversation: Conversation) => {
+    const confirmed = window.confirm(`Xoa doan chat "${conversation.ChatName}" khoi danh sach?`);
+    if (!confirmed) return;
+
+    setDeletingConversationId(conversation.ConversationId);
+    setOpenConversationMenuId(null);
+
+    try {
+      await conversationApi.deleteConversation(conversation.ConversationId);
+      setConversations((prev) => prev.filter((conv) => conv.ConversationId !== conversation.ConversationId));
+      onConversationDeleted?.(conversation.ConversationId);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        alert(err.response?.data?.message || 'Khong the xoa doan chat nay');
+      } else {
+        alert('Khong the xoa doan chat nay');
+      }
+    } finally {
+      setDeletingConversationId(null);
     }
   };
 
@@ -314,16 +343,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
                 <li
                   key={conv.ConversationId}
                   onClick={() => onSelectConversation(conv.ConversationId)}
-                  className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-colors duration-200 ${activeConversationId === conv.ConversationId
+                  className={`relative flex items-center gap-3 p-2.5 pr-11 rounded-xl cursor-pointer transition-colors duration-200 group ${activeConversationId === conv.ConversationId
                       ? 'bg-indigo-50/80 shadow-sm ring-1 ring-indigo-100'
                       : 'hover:bg-slate-200/50'
                     }`}
                 >
-                  <div className={`relative w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-[15px] shadow-sm ${conv.IsGroupChat
-                      ? 'bg-gradient-to-br from-purple-500 to-pink-500'
-                      : 'bg-gradient-to-br from-indigo-400 to-blue-500'
-                    }`}>
-                    {(conv.ChatName || '?').charAt(0).toUpperCase()}
+                  <div className="relative shrink-0">
+                    <ChatAvatar avatarUrl={conv.OtherUserAvatar} fullName={conv.ChatName || '?'} size={48} />
                     {conv.IsGroupChat && (
                       <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
                         <div className="bg-purple-500 text-white rounded-full w-[14px] h-[14px] flex items-center justify-center">
@@ -340,6 +366,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
                     <p className={`text-[13px] font-medium truncate ${activeConversationId === conv.ConversationId ? 'text-indigo-600/80' : 'text-slate-500'}`}>
                       Nhấn để xem tin nhắn...
                     </p>
+                  </div>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2" ref={openConversationMenuId === conv.ConversationId ? conversationMenuRef : undefined}>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenConversationMenuId((current) => current === conv.ConversationId ? null : conv.ConversationId);
+                      }}
+                      disabled={deletingConversationId === conv.ConversationId}
+                      className={`p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-all disabled:opacity-50 ${
+                        openConversationMenuId === conv.ConversationId ? 'opacity-100 bg-white shadow-sm' : 'opacity-0 group-hover:opacity-100'
+                      }`}
+                      title="Tuy chon"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M5 10a2 2 0 110 4 2 2 0 010-4zm7 0a2 2 0 110 4 2 2 0 010-4zm7 0a2 2 0 110 4 2 2 0 010-4z" />
+                      </svg>
+                    </button>
+
+                    {openConversationMenuId === conv.ConversationId && (
+                      <div
+                        className="absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl z-40 animate-fade-in-up"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteConversation(conv)}
+                          className="w-full px-3 py-2.5 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2.5"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-8 0h10" />
+                          </svg>
+                          Xoa doan chat
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}

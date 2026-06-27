@@ -1,3 +1,5 @@
+import { SERVER_URL } from "./env";
+
 /**
  * Chuẩn hóa avatar URL
  * @param url - URL avatar từ backend
@@ -10,9 +12,8 @@ export const normalizeAvatarUrl = (url?: string | null): string | null => {
   if (url.startsWith("http")) return url;
   
   // Nếu là relative path
-  const baseUrl = "http://localhost:5000";
   const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
-  return `${baseUrl}${normalizedUrl}`;
+  return `${SERVER_URL}${normalizedUrl}`;
 };
 
 /**
@@ -25,9 +26,8 @@ export const normalizeMediaUrl = (url?: string | null): string | null => {
 
   if (url.startsWith("http")) return url;
 
-  const baseUrl = "http://localhost:5000";
   const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
-  return `${baseUrl}${normalizedUrl}`;
+  return `${SERVER_URL}${normalizedUrl}`;
 };
 
 /**

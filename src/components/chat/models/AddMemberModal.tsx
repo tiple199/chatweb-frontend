@@ -3,6 +3,7 @@ import { SearchUser } from '../SearchUser';
 import type { User } from '../../../types/user.type';
 import { participantApi } from '../../../api/conversation.api';
 import { AxiosError } from 'axios';
+import { ChatAvatar } from '../../ChatAvatar';
 
 interface AddMemberModalProps {
   conversationId: string;
@@ -67,9 +68,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ conversationId, 
           {selectedUser && (
             <div className="mt-4 p-4 border border-blue-100 bg-blue-50/50 rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold shadow-sm">
-                  {selectedUser.fullName.charAt(0).toUpperCase()}
-                </div>
+                <ChatAvatar avatarUrl={selectedUser.avatar} fullName={selectedUser.fullName} size={40} />
                 <div>
                   <h4 className="font-semibold text-slate-800 text-sm">{selectedUser.fullName}</h4>
                   <p className="text-xs text-slate-500">{selectedUser.email}</p>

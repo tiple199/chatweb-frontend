@@ -12,4 +12,4 @@ export interface User {
   isActive: boolean;
   createAt: string;
   updatedAt: string;
-}
+} 

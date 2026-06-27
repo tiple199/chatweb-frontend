@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { messageApi } from '../../api/message.api';
+import { participantApi } from '../../api/conversation.api';
 import type { Message } from '../../types/message.type';
+import type { ConversationParticipant } from '../../types/conversation.type';
 import { mapBackendMessage } from '../../lib/messageMapper';
 import { normalizeMediaUrl } from '../../lib/utils';
+import { ChatAvatar } from '../ChatAvatar';
+import { Key } from 'lucide-react';
 
 interface ChatInfoDrawerProps {
   conversationId: string;
@@ -15,6 +19,7 @@ export const ChatInfoDrawer: React.FC<ChatInfoDrawerProps> = ({ conversationId, 
   const [activeTab, setActiveTab] = useState<TabType>('images');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [members, setMembers] = useState<ConversationParticipant[]>([]);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -30,8 +35,42 @@ export const ChatInfoDrawer: React.FC<ChatInfoDrawerProps> = ({ conversationId, 
         setIsLoading(false);
       }
     };
+
     fetchMedia();
   }, [conversationId]);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      // Mocking member data
+      try {
+        const res = await participantApi.getParticipants(conversationId);
+        setMembers(res.data);
+      } catch (e) {
+        console.error('Lỗi khi tải danh sách thành viên:', e);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
+
+  const leaveGroup = async () => {
+    // Xác nhận trước khi rời nhóm
+    if (!window.confirm('Bạn có chắc chắn muốn rời khỏi nhóm chat này?')) {
+      return;
+    }
+    try {
+      await participantApi.leaveGroup(conversationId);
+      alert('Bạn đã rời khỏi nhóm chat.');
+      // diều hướng người dùng về trang chính
+      window.location.href = '/';
+      onClose(); // Đóng drawer sau khi rời nhóm
+    }
+    catch (e) {
+      console.error('Lỗi khi rời khỏi nhóm:', e);
+      alert('Có lỗi xảy ra khi rời khỏi nhóm.');
+    } 
+  }
 
   const images = messages.filter(m => m.MessageType === 'image' && m.FileName);
   const videos = messages.filter(m => m.MessageType === 'video' && m.FileName);
@@ -114,6 +153,82 @@ export const ChatInfoDrawer: React.FC<ChatInfoDrawerProps> = ({ conversationId, 
     }
   };
 
+  const MemberItem: React.FC<{ member: ConversationParticipant }> = ({ member }) => (
+    <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-all shadow-sm">
+      <div className="relative">
+        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shadow-sm ring-2 ring-white overflow-hidden">
+          <ChatAvatar 
+            avatarUrl={member?.avatar || null} 
+            fullName={member?.fullName || 'U'} 
+            size={32} 
+          />
+        </div>
+        
+        {/* Badge Admin hiển thị ở góc dưới bên phải avatar */}
+        {member.role === 'admin' && (
+          <div className="absolute -bottom-0.5 -right-0.5 bg-amber-400 p-0.5 rounded-full border border-white text-white">
+            <Key size={10} strokeWidth={3} />
+          </div>
+        )}
+      </div>
+
+      <span className="text-sm font-medium text-slate-700 truncate">{member.fullName}</span>
+      
+      {member.role === 'admin' && (
+        <span className="ml-auto text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">
+          Admin
+        </span>
+      )}
+      <div className="ml-auto  rounded-full hover:bg-gray-100 transition-all">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          title="Tuy chon"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 10a2 2 0 110 4 2 2 0 010-4zm7 0a2 2 0 110 4 2 2 0 010-4zm7 0a2 2 0 110 4 2 2 0 010-4z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderMemberList = () => {
+    if (members.length <= 2) return null; // Không hiển thị danh sách thành viên nếu là chat 1-1
+
+    return (
+      <div className="border-t border-slate-100 p-4 bg-slate-50/50">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">Thành viên ({members.length})</h3>
+        <div className="flex flex-col gap-2">
+          {members.map(member => (
+            <MemberItem key={member.userId} member={member} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // 3. Render Button Rời nhóm màu đỏ & icon
+  const renderStickyButton = () => {
+    if (members.length <= 2) return null; // Chỉ hiển thị nút rời nhóm nếu là nhóm chat (nhiều hơn 2 thành viên)
+
+    return (
+      <div className="sticky bottom-0 bg-white border-t border-slate-100 p-3">
+        <button 
+          onClick={leaveGroup} 
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-semibold transition-all active:scale-95"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Rời khỏi nhóm
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="w-80 border-l border-slate-200 bg-white flex flex-col h-full animate-fade-in-left relative z-20 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
       <div className="h-16 border-b border-slate-200 flex items-center justify-between px-4 shrink-0 bg-slate-50">
@@ -153,6 +268,9 @@ export const ChatInfoDrawer: React.FC<ChatInfoDrawerProps> = ({ conversationId, 
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50">
         {renderContent()}
       </div>
+
+      {renderMemberList()}
+      {renderStickyButton()}
     </div>
   );
-};
+}

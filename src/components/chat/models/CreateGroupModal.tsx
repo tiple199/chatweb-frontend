@@ -3,6 +3,7 @@ import { conversationApi } from '../../../api/conversation.api';
 import { friendApi } from '../../../api/friend.api';
 import type { User } from '../../../types/user.type';
 import { AxiosError } from 'axios';
+import { ChatAvatar } from '../../ChatAvatar';
 
 interface CreateGroupModalProps {
   onClose: () => void;
@@ -114,9 +115,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ onClose, onS
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-blue-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                          {friend.fullName.charAt(0).toUpperCase()}
-                        </div>
+                        <ChatAvatar avatarUrl={friend.avatar} fullName={friend.fullName} size={32} />
                         <span className="text-sm font-semibold text-slate-700">{friend.fullName}</span>
                       </div>
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
@@ -138,9 +137,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ onClose, onS
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar p-1">
                 {selectedUsers.map(user => (
                   <div key={user._id} className="flex items-center gap-1.5 bg-blue-50 border border-blue-100 pl-2 pr-1 py-1 rounded-full">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold">
-                      {user.fullName.charAt(0).toUpperCase()}
-                    </div>
+                    <ChatAvatar avatarUrl={user.avatar} fullName={user.fullName} size={20} />
                     <span className="text-xs font-medium text-blue-700">{user.fullName.split(' ').pop()}</span>
                     <button 
                       onClick={() => handleRemoveUser(user._id)}

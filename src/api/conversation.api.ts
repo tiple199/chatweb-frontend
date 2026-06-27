@@ -17,6 +17,9 @@ export const conversationApi = {
   updateConversation: (id:string, data: Partial<Conversation>) => 
     api.put<Conversation>(`/conversations/${id}`, data),
 
+  deleteConversation: (conversationId: string) =>
+    api.delete<{ success: boolean }>(`/conversations/${conversationId}`),
+
   // Đánh dấu đã đọc tất cả tin nhắn trong conversation
   markAsRead: (conversationId: string) => 
     api.put<{ success: boolean }>(`/conversations/${conversationId}/read`),
@@ -34,4 +37,9 @@ export const participantApi = {
   // Xóa thành viên (Admin xóa)
   removeMember: (conversationId:string, userId:string, removeByUserId:string) => 
     api.delete(`/conversations/${conversationId}/participants/${userId}`, { data: { removeBy: removeByUserId } }),
+
+  // Rời khỏi nhóm (User tự rời)
+  leaveGroup: (conversationId:string) => 
+    api.delete(`/conversations/${conversationId}/leave`),
+
 };

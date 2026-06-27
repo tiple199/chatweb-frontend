@@ -3,12 +3,13 @@ import type { User } from '../../types/user.type';
 import { friendApi, type FriendStatus } from '../../api/friend.api';
 import { conversationApi } from '../../api/conversation.api';
 import { useAuthStore } from '../../store/auth.store';
+import { ChatAvatar } from '../ChatAvatar';
 
 interface UserProfileViewProps {
   user: User;
   onStartChat: (conversationId: string) => void;
   onClose: () => void;
-}
+} 
 
 export const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onStartChat, onClose }) => {
   const { user: currentUser } = useAuthStore();
@@ -91,8 +92,8 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onStartC
       <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 w-[400px] flex flex-col items-center text-center">
         {/* Avatar lớn */}
         <div className="relative mb-6">
-          <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-5xl shadow-lg border-4 border-white">
-            {user.fullName.charAt(0).toUpperCase()}
+          <div className="rounded-full border-4 border-white shadow-lg overflow-hidden">
+            <ChatAvatar avatarUrl={user.avatar} fullName={user.fullName} size={128} />
           </div>
           {user.isOnline && (
             <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm"></div>

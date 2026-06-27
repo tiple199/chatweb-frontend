@@ -30,7 +30,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
   const [latestNote, setLatestNote] = useState<GroupNote | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
   const [openMedia, setOpenMedia] = useState<OpenMediaState>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -129,7 +128,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
         const readerInfo = {
           _id: userId,
           fullName: participant?.fullName || '',
-          avatar: null // avatar might be missing in participant data, ideally fetched or stored in state
+          avatar: participant?.avatar || null
         };
 
         setMessages((prev) => 
@@ -284,7 +283,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
                 return (
                   <div key={userId} className="relative shadow-sm ring-2 ring-white rounded-full">
                     <ChatAvatar 
-                      avatarUrl={null} 
+                      avatarUrl={participant?.avatar || null} 
                       fullName={participant?.fullName || 'U'} 
                       size={32} 
                     />

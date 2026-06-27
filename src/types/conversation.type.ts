@@ -8,13 +8,15 @@ export interface Conversation {
   UpdatedAt: string;
   IsActive: boolean;
   OtherUserId?: string;
+  OtherUserAvatar?: string | null;
 }
 
 export interface ConversationParticipant {
   ConversationId?: string;
-  UserId?: string;
+  UserId?: string; 
   userId?: string;
   fullName?: string;
+  avatar?: string | null;
   JoinedAt?: string;
   Role?: string;
   role?: string;

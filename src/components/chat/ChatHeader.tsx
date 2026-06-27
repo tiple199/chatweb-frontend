@@ -1,5 +1,6 @@
 import type { Conversation } from '../../types/conversation.type';
 import type { User } from '../../types/user.type';
+import { ChatAvatar } from '../ChatAvatar';
 
 interface ChatHeaderProps {
   conversation: Conversation | null;
@@ -47,12 +48,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
         
         {/* Avatar */}
-        <div className={`relative w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ring-2 ring-white ${
-          isGroup 
-          ? 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/20' 
-          : 'bg-gradient-to-br from-sky-400 to-blue-500 shadow-blue-500/20'
-        }`}>
-          {(displayName || '?').charAt(0).toUpperCase()}
+        <div className="relative ring-2 ring-white rounded-full">
+          <ChatAvatar
+            avatarUrl={isStranger ? strangerUser?.avatar : conversation?.OtherUserAvatar}
+            fullName={displayName || '?'}
+            size={44}
+          />
           {(!isGroup && (strangerUser?.isOnline || conversation)) && (
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
           )}

@@ -8,6 +8,7 @@ export interface BackendConversation {
   latestMessage?: any;
   createdAt: string;
   updatedAt: string;
+  otherUserAvatar?: string | null;
   otherUserId?: string; // Sẽ được thêm ở backend
 }
 
@@ -21,7 +22,8 @@ export const mapBackendConversation = (be: BackendConversation): Conversation =>
     CreateAt: be.createdAt || (be as any).CreateAt,
     UpdatedAt: be.updatedAt || (be as any).UpdatedAt,
     IsActive: true,
-    OtherUserId: be.otherUserId || (be as any).OtherUserId
+    OtherUserId: be.otherUserId || (be as any).OtherUserId,
+    OtherUserAvatar: be.otherUserAvatar || (be as any).OtherUserAvatar || null
   };
 };
 

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { authApi } from '../../api/auth.api';
 import { useAuthStore } from '../../store/auth.store'; 
+import { Eye, EyeOff } from 'lucide-react';
 import type { User } from '../../types/user.type';
 
 interface AuthResponse {
@@ -22,6 +23,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,19 +86,27 @@ export const LoginPage: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="relative space-y-1.5"> {/* Thêm relative ở đây */}
               <label className="text-sm font-semibold text-slate-700 ml-1">Mật khẩu</label>
               <input
                 id="login-password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl glass-input text-slate-800 placeholder:text-slate-400"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                // Điều chỉnh top-9 (hoặc giá trị phù hợp với chiều cao label) để căn giữa icon
+                className="absolute right-3 top-[calc(50%+10px)] transform -translate-y-1/2 p-2 text-slate-500 hover:text-slate-600 transition-all"
+              >
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
             </div>
-            
+
             <button 
               id="login-submit"
               type="submit" 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { friendApi, type FriendRequest } from '../../../api/friend.api';
+import { ChatAvatar } from '../../ChatAvatar';
 
 interface FriendRequestsModalProps {
   onClose: () => void;
@@ -75,9 +76,7 @@ export const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ onClos
               {requests.map(req => (
                 <li key={req.id} className="p-3 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-blue-500 text-white flex shrink-0 items-center justify-center font-bold text-sm shadow-sm">
-                      {req.sender.fullName.charAt(0).toUpperCase()}
-                    </div>
+                    <ChatAvatar avatarUrl={req.sender.avatar} fullName={req.sender.fullName} size={40} />
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-bold text-slate-800 truncate">{req.sender.fullName}</span>
                       <span className="text-xs text-slate-500 truncate">{req.sender.email}</span>
