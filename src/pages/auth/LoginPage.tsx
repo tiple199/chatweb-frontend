@@ -87,7 +87,10 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="relative space-y-1.5"> {/* Thêm relative ở đây */}
-              <label className="text-sm font-semibold text-slate-700 ml-1">Mật khẩu</label>
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-sm font-semibold text-slate-700">Mật khẩu</label>
+                <Link to="/forgot-password" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline transition-all">Quên mật khẩu?</Link>
+              </div>
               <input
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
