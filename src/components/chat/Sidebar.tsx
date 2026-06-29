@@ -24,6 +24,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelectConversation, onSelectStranger, onConversationDeleted }) => {
   const { user, logout, updateUser } = useAuthStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string>('');
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [isFriendRequestsOpen, setIsFriendRequestsOpen] = useState(false);
@@ -165,10 +166,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
       await fetchFriendRequests();
     });
 
+    const cleanupOnlineList = onEvent('online_users_list', (users: string[]) => {
+      setOnlineUsers(new Set(users));
+    });
+
+    const cleanupUserOnline = onEvent('user_online', ({ userId }) => {
+      setOnlineUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.add(userId);
+        return newSet;
+      });
+    });
+
+    const cleanupUserOffline = onEvent('user_offline', ({ userId }) => {
+      setOnlineUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    });
+
     return () => {
       cleanupFriendRequest();
       cleanupFriendAccepted();
       cleanupFriendDeclined();
+      cleanupOnlineList();
+      cleanupUserOnline();
+      cleanupUserOffline();
     };
   }, [socket, onEvent]);
 
@@ -350,12 +374,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
                 >
                   <div className="relative shrink-0">
                     <ChatAvatar avatarUrl={conv.OtherUserAvatar} fullName={conv.ChatName || '?'} size={48} />
-                    {conv.IsGroupChat && (
+                    {conv.IsGroupChat ? (
                       <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
                         <div className="bg-purple-500 text-white rounded-full w-[14px] h-[14px] flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
                         </div>
                       </div>
+                    ) : (
+                      conv.OtherUserId && onlineUsers.has(conv.OtherUserId) && (
+                        <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-sm ring-1 ring-white">
+                          <div className="bg-emerald-500 rounded-full w-3.5 h-3.5 border-2 border-white shadow-sm" title="Trực tuyến" />
+                        </div>
+                      )
                     )}
                   </div>
 

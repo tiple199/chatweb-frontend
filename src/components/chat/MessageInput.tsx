@@ -14,6 +14,7 @@ interface MessageInputProps {
 const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMessage, onCancelEdit }) => {
   const [content, setContent] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isSending, setIsSending] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +39,15 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMess
       setContent('');
     }
   }, [editingMessage]);
+
+  useEffect(() => {
+    if (file && file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [file]);
 
   const emitTypingIfNeeded = () => {
     if (!typingActiveRef.current) {
@@ -138,13 +148,19 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMess
         <div className="flex-1 flex flex-col justify-end bg-transparent rounded-2xl overflow-hidden mb-0.5">
           {file && (
             <div className="flex items-start gap-3 px-3 py-3 bg-indigo-50/60 border-b border-indigo-100/50 relative rounded-t-xl mx-2 mt-2">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-600 shadow-sm">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-              </div>
+              {previewUrl ? (
+                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-sm border border-indigo-100 bg-white">
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-600 shadow-sm">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                </div>
+              )}
               
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-slate-700 truncate pr-6">{file.name}</p>
-                <p className="text-[11px] text-slate-500 font-medium">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+              <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+                <p className="text-[14px] font-semibold text-slate-700 truncate pr-6 leading-tight">{file.name}</p>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
               
               <button 
