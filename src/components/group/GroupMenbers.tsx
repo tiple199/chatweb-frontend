@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { participantApi } from '../../api/conversation.api';
 import type { ConversationParticipant } from '../../types/conversation.type';
 import { useAuthStore } from '../../store/auth.store';
+import { useSocket } from '../../hooks/useSocket';
 import { ChatAvatar } from '../ChatAvatar';
 import { Key } from 'lucide-react';
 
@@ -17,19 +18,31 @@ export const GroupMembers: React.FC<GroupMembersProps> = ({ conversationId }) =>
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const res = await participantApi.getParticipants(conversationId);
-        setMembers(res.data);
-      } catch (err: unknown) {
-        if (err instanceof AxiosError) {
-          setError(err.response?.data?.message || 'Lỗi khi tải thành viên.');
-        }
+  const { onEvent } = useSocket();
+
+  const fetchMembers = async () => {
+    try {
+      const res = await participantApi.getParticipants(conversationId);
+      setMembers(res.data);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || 'Lỗi khi tải thành viên.');
       }
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchMembers();
   }, [conversationId]);
+
+  useEffect(() => {
+    const cleanup = onEvent('receive_message', (msg: any) => {
+      if (msg.conversationId === conversationId && msg.messageType === 'system') {
+        fetchMembers();
+      }
+    });
+    return () => cleanup();
+  }, [conversationId, onEvent]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

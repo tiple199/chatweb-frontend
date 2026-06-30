@@ -108,8 +108,16 @@ export const ChatPage: React.FC = () => {
       }, 5000);
     });
 
+    const cleanupAdded = onEvent('added_to_group', async (data: any) => {
+      await loadConversations();
+      if (data.conversationId) {
+        handleSelectConversation(data.conversationId);
+      }
+    });
+
     return () => {
       cleanup();
+      cleanupAdded();
     };
   }, [activeConversationId, onEvent]);
 
