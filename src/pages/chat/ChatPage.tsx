@@ -160,6 +160,26 @@ export const ChatPage: React.FC = () => {
     setActiveConversation(currentConversation || null);
   };
 
+  const handleShowUserProfile = (partialUser: Partial<User>) => {
+    setSelectedStranger({
+      _id: partialUser._id || '',
+      fullName: partialUser.fullName || 'Người dùng',
+      email: partialUser.email || '',
+      avatar: partialUser.avatar || '',
+      isOnline: partialUser.isOnline || false,
+      isVerified: true,
+      lastActive: new Date().toISOString(),
+      role: 'user',
+      isActive: true,
+      createAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...partialUser
+    } as User);
+    setStrangerChatUser(null);
+    setActiveConversationId(undefined);
+    setActiveConversation(null);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden font-sans bg-slate-50">
       <Sidebar
@@ -184,6 +204,7 @@ export const ChatPage: React.FC = () => {
           onToggleInfo={() => setIsInfoOpen(!isInfoOpen)}
           isSearchOpen={isSearchOpen}
           isInfoOpen={isInfoOpen}
+          onShowUserProfile={handleShowUserProfile}
         />
 
         {isSearchOpen && activeConversationId && (
@@ -205,7 +226,7 @@ export const ChatPage: React.FC = () => {
         ) : activeConversationId ? (
           <div className="flex-1 overflow-hidden relative flex">
             <div className="flex-1 relative">
-              <ChatWindow conversationId={activeConversationId} />
+              <ChatWindow conversationId={activeConversationId} onShowUserProfile={handleShowUserProfile} />
             </div>
             {isInfoOpen && (
               <ChatInfoDrawer conversationId={activeConversationId} onClose={() => setIsInfoOpen(false)} />

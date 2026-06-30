@@ -9,12 +9,13 @@ interface MessageItemProps {
   isMine: boolean;
   conversationId?: string;
   readByUsers?: { _id: string; fullName: string; avatar: string | null }[];
+  onShowUserProfile?: (user: Partial<import('../../types/user.type').User>) => void;
   onOpenMedia?: (payload: { url: string; type: string }) => void;
   onEditMessage?: (message: Message) => void;
   onDeleteMessage?: (message: Message) => void;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conversationId, readByUsers = [], onOpenMedia, onEditMessage, onDeleteMessage }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conversationId, readByUsers = [], onShowUserProfile, onOpenMedia, onEditMessage, onDeleteMessage }) => {
   const [showOptions, setShowOptions] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +44,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
     return (
       <div className={`flex w-full mb-6 animate-fade-in-up ${isMine ? 'justify-end' : 'justify-start'}`}>
         {!isMine && (
-          <div className="mr-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200">
+          <div 
+            className="mr-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200 cursor-pointer"
+            onClick={() => onShowUserProfile?.({
+              _id: message.Sender?._id || '',
+              fullName: message.Sender?.fullName || 'Người dùng',
+              avatar: message.Sender?.avatar || ''
+            })}
+          >
             <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
           </div>
         )}
@@ -70,7 +78,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
   return (
     <div className={`flex w-full mb-6 group animate-fade-in-up ${isMine ? 'justify-end' : 'justify-start'}`}>
       {!isMine && (
-        <div className="mr-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200">
+        <div 
+          className="mr-3 mt-auto shrink-0 shadow-sm rounded-full overflow-hidden border border-slate-200 cursor-pointer"
+          onClick={() => onShowUserProfile?.({
+            _id: message.Sender?._id || '',
+            fullName: message.Sender?.fullName || 'Người dùng',
+            avatar: message.Sender?.avatar || ''
+          })}
+        >
           <ChatAvatar avatarUrl={senderAvatar} fullName={message.Sender?.fullName || 'Người dùng'} size={36} />
         </div>
       )}

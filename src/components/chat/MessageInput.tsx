@@ -111,6 +111,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMess
       setFile(null);
       setUploadProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      window.dispatchEvent(new Event('refresh_conversations'));
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
         alert(err.response?.data?.message || 'Gửi tin nhắn thất bại.');
@@ -136,7 +137,20 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversationId, editingMess
         <input
           type="file"
           ref={fileInputRef}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFile(e.target.files?.[0] || null)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const selectedFile = e.target.files?.[0];
+            if (selectedFile) {
+              const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+              if (selectedFile.size > MAX_FILE_SIZE) {
+                alert('Dung lượng file quá lớn! Vui lòng chọn file dưới 10MB.');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+              }
+              setFile(selectedFile);
+            } else {
+              setFile(null);
+            }
+          }}
           className="hidden"
           id="file-upload"
           disabled={!!editingMessage}

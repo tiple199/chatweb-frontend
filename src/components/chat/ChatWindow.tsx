@@ -14,6 +14,8 @@ import { MessageItem } from './MessageItem';
 import { ChatAvatar } from '../ChatAvatar';
 import { MediaLightbox } from './MediaLightbox';
 
+import type { User } from '../../types/user.type';
+
 type OpenMediaState = {
   url: string;
   type: string;
@@ -21,9 +23,10 @@ type OpenMediaState = {
 
 interface ChatWindowProps {
   conversationId: string;
+  onShowUserProfile?: (user: Partial<User>) => void;
 }
 
-export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
+export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, onShowUserProfile }) => {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string>('');
@@ -260,6 +263,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
                 conversationId={conversationId}
                 readByUsers={readByUsers}
                 onOpenMedia={(payload) => setOpenMedia(payload)}
+                onShowUserProfile={onShowUserProfile}
                 onEditMessage={(m) => setEditingMessage(m)}
                 onDeleteMessage={async (m) => {
                   if (window.confirm("Bạn có chắc chắn muốn thu hồi tin nhắn này không?")) {

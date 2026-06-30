@@ -113,6 +113,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      notification.error({ message: 'Lỗi', description: 'Dung lượng ảnh quá lớn! Vui lòng chọn ảnh dưới 10MB.' });
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setIsUploadingAvatar(true);
     try {
       const res = await userApi.updateAvatar(file);
@@ -168,10 +175,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
   }, []);
 
   useEffect(() => {
+    const handleRefresh = () => {
+      fetchConversations();
+    };
+    window.addEventListener('refresh_conversations', handleRefresh);
+    return () => window.removeEventListener('refresh_conversations', handleRefresh);
+  }, []);
+
+  useEffect(() => {
     if (!socket) return;
 
     const cleanupFriendRequest = onEvent('friend_request', async () => {
       await fetchFriendRequests();
+    });
+
+    const cleanupNewMessage = onEvent('new_message_notification', async () => {
+      await fetchConversations();
     });
 
     const cleanupFriendAccepted = onEvent('friend_accepted', async () => {
@@ -210,6 +229,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
       cleanupOnlineList();
       cleanupUserOnline();
       cleanupUserOffline();
+      cleanupNewMessage();
     };
   }, [socket, onEvent]);
 

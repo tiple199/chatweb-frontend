@@ -13,6 +13,7 @@ interface ChatHeaderProps {
   onToggleInfo?: () => void;
   isSearchOpen?: boolean;
   isInfoOpen?: boolean;
+  onShowUserProfile?: (user: Partial<User>) => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({ 
@@ -25,7 +26,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onToggleSearch,
   onToggleInfo,
   isSearchOpen,
-  isInfoOpen
+  isInfoOpen,
+  onShowUserProfile
 }) => {
   if (!conversation && !strangerUser) {
     return (
@@ -48,7 +50,20 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
         
         {/* Avatar */}
-        <div className="relative ring-2 ring-white rounded-full">
+        <div 
+          className="relative ring-2 ring-white rounded-full cursor-pointer"
+          onClick={() => {
+            if (isStranger && strangerUser) {
+              onShowUserProfile?.(strangerUser);
+            } else if (!isGroup && conversation?.OtherUserId) {
+              onShowUserProfile?.({
+                _id: conversation.OtherUserId,
+                fullName: conversation.ChatName || 'Người dùng',
+                avatar: conversation.OtherUserAvatar || ''
+              });
+            }
+          }}
+        >
           <ChatAvatar
             avatarUrl={isStranger ? strangerUser?.avatar : conversation?.OtherUserAvatar}
             fullName={displayName || '?'}
