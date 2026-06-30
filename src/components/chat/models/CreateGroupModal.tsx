@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { conversationApi } from '../../../api/conversation.api';
 import { friendApi } from '../../../api/friend.api';
 import type { User } from '../../../types/user.type';
@@ -64,8 +65,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ onClose, onS
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
       <div className="bg-white rounded-2xl shadow-xl w-[90%] max-w-md overflow-hidden flex flex-col transform transition-all">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -171,4 +172,6 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ onClose, onS
       </div>
     </div>
   );
+
+  return document.body ? createPortal(modalContent, document.body) : modalContent;
 };

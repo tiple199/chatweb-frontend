@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { friendApi, type FriendRequest } from '../../../api/friend.api';
 import { ChatAvatar } from '../../ChatAvatar';
 
@@ -44,8 +45,8 @@ export const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ onClos
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
       <div className="bg-white rounded-2xl shadow-xl w-[90%] max-w-md overflow-hidden flex flex-col transform transition-all animate-fade-in-up">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -105,4 +106,6 @@ export const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ onClos
       </div>
     </div>
   );
+
+  return document.body ? createPortal(modalContent, document.body) : modalContent;
 };
