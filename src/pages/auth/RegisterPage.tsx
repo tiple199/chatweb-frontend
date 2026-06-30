@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { authApi } from '../../api/auth.api';
 import { Eye, EyeOff } from 'lucide-react';
+import { notification } from 'antd';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,27 +11,25 @@ export const RegisterPage: React.FC = () => {
     fullName: '', email: '', password: '', confirmPassword: '', otp: ''
   });
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   const handleSendOtp = async () => {
     if (!formData.email) {
-      setError('Vui lòng nhập email trước!');
+      notification.warning({ message: 'Thông báo', description: 'Vui lòng nhập email trước!' });
       return;
     }
-    setError('');
     setIsLoading(true);
     try {
       await authApi.sendOtp({ email: formData.email });
       setIsOtpSent(true);
-      alert('Mã OTP đã được gửi đến email của bạn!');
+      notification.success({ message: 'Thành công', description: 'Mã OTP đã được gửi đến email của bạn!' });
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Lỗi khi gửi OTP');
+        notification.error({ message: 'Lỗi', description: err.response?.data?.message || 'Lỗi khi gửi OTP' });
       } else {
-        setError('Lỗi không xác định khi gửi OTP');
+        notification.error({ message: 'Lỗi hệ thống', description: 'Lỗi không xác định khi gửi OTP' });
       }
     } finally {
       setIsLoading(false);
@@ -39,23 +38,22 @@ export const RegisterPage: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp!');
+      notification.error({ message: 'Lỗi', description: 'Mật khẩu xác nhận không khớp!' });
       return;
     }
 
     setIsLoading(true);
     try {
       await authApi.register(formData);
-      alert('Đăng ký thành công!');
+      notification.success({ message: 'Thành công', description: 'Đăng ký thành công!' });
       navigate('/login');
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Đăng ký thất bại!');
+        notification.error({ message: 'Lỗi đăng ký', description: err.response?.data?.message || 'Đăng ký thất bại!' });
       } else {
-        setError('Lỗi không xác định khi đăng ký.');
+        notification.error({ message: 'Lỗi hệ thống', description: 'Lỗi không xác định khi đăng ký.' });
       }
     } finally {
       setIsLoading(false);
@@ -85,12 +83,6 @@ export const RegisterPage: React.FC = () => {
           <p className="text-slate-500 mb-8 font-medium">Tham gia và bắt đầu trò chuyện ngay hôm nay</p>
 
           <form onSubmit={handleRegister} className="space-y-4 text-left">
-            {error && (
-              <div className="p-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-xl text-sm font-medium animate-fade-in-up">
-                {error}
-              </div>
-            )}
-
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700 ml-1">Họ và tên</label>
               <input

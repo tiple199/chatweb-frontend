@@ -82,10 +82,24 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
         
         <div className="relative group/bubble flex items-center">
           {isMine && (
-            <div className={`absolute right-full mr-2 opacity-0 group-hover/bubble:opacity-100 transition-opacity ${showOptions ? 'opacity-100' : ''}`} ref={optionsRef}>
+            <div className={`absolute right-full mr-2 flex items-center opacity-0 group-hover/bubble:opacity-100 transition-opacity ${showOptions ? 'opacity-100' : ''}`} ref={optionsRef}>
+              {(message.MessageType === 'file' || message.MessageType === 'image' || message.MessageType === 'video') && (message.FileUrl || mediaUrl) && (
+                <a 
+                  href={mediaUrl || message.FileUrl} 
+                  download={message.FileName || "download"} 
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-1.5 mr-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors inline-flex"
+                  title="Tải xuống"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </a>
+              )}
               <button 
                 onClick={() => setShowOptions(!showOptions)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors inline-flex"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
               </button>
@@ -143,11 +157,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
           )}
           
           {message.MessageType === 'file' && (message.FileUrl || mediaUrl) && (
-            <a 
-              href={mediaUrl || message.FileUrl} 
-              target="_blank" 
-              rel="noreferrer" 
-              className={`flex items-center gap-3 p-3 mb-2 rounded-2xl transition-colors ${
+            <button 
+              type="button"
+              onClick={() => onOpenMedia && onOpenMedia({ url: mediaUrl || message.FileUrl || '', type: 'file' })}
+              className={`w-full text-left flex items-center gap-3 p-3 mb-2 rounded-2xl transition-colors ${
                 isMine ? 'bg-white/20 hover:bg-white/30 text-white border border-white/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/60'
               }`}
             >
@@ -158,12 +171,29 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isMine, conve
                 <span className="truncate text-[15px] font-semibold">{message.FileName || 'Tải file đính kèm'}</span>
                 {message.FileSize && <span className="text-[11px] opacity-80 mt-0.5">{(message.FileSize / 1024 / 1024).toFixed(2)} MB</span>}
               </div>
-            </a>
+            </button>
           )}
           
           {/* Nội dung text */}
           {message.Content && <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed tracking-wide">{message.Content}</p>}
         </div>
+
+        {!isMine && (message.MessageType === 'file' || message.MessageType === 'image' || message.MessageType === 'video') && (message.FileUrl || mediaUrl) && (
+          <div className="absolute left-full ml-2 opacity-0 group-hover/bubble:opacity-100 transition-opacity flex items-center">
+             <a 
+                href={mediaUrl || message.FileUrl} 
+                download={message.FileName || "download"} 
+                target="_blank"
+                rel="noreferrer"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors inline-flex"
+                title="Tải xuống"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </a>
+          </div>
+        )}
         </div>
         
         {/* Thời gian và Trạng thái */}

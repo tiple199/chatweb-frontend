@@ -115,7 +115,13 @@ export const MediaLightbox: React.FC<MediaLightboxProps> = ({ url, type, onClose
         className="max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
-        {type === 'image' || type.startsWith('image/') ? (
+        {type === 'file' ? (
+          <iframe 
+            src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`} 
+            title="File Preview" 
+            className="w-full h-full bg-white rounded-lg shadow-2xl border-none"
+          />
+        ) : type === 'image' || type.startsWith('image/') ? (
           <img 
             src={url} 
             alt="Fullscreen preview" 

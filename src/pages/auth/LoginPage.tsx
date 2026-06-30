@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { authApi } from '../../api/auth.api';
 import { useAuthStore } from '../../store/auth.store'; 
 import { Eye, EyeOff } from 'lucide-react';
+import { notification } from 'antd';
 import type { User } from '../../types/user.type';
 
 interface AuthResponse {
@@ -21,27 +22,27 @@ export const LoginPage: React.FC = () => {
   
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await authApi.login({ email, password });
-      const { user, accessToken } = (response.data as unknown as LoginApiResponse).data; 
+      const { user, accessToken, refreshToken } = (response.data as unknown as any).data; 
       
       setAuth(user, accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      notification.success({ message: 'Thành công', description: 'Đăng nhập thành công!' });
       navigate("/");
 
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại.');
+        notification.error({ message: 'Lỗi đăng nhập', description: err.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác.' });
       } else {
-        setError('Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.');
+        notification.error({ message: 'Lỗi hệ thống', description: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.' });
       }
     } finally {
       setIsLoading(false);
@@ -67,11 +68,6 @@ export const LoginPage: React.FC = () => {
           <p className="text-slate-500 mb-8 font-medium">Đăng nhập để tiếp tục trò chuyện</p>
 
           <form onSubmit={handleLogin} className="space-y-5 text-left">
-            {error && (
-              <div className="p-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-xl text-sm font-medium animate-fade-in-up">
-                {error}
-              </div>
-            )}
 
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700 ml-1">Email</label>

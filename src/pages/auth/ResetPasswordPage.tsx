@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { authApi } from '../../api/auth.api';
 import { Eye, EyeOff } from 'lucide-react';
+import { notification } from 'antd';
 
 export const ResetPasswordPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -11,31 +12,36 @@ export const ResetPasswordPage: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.');
+      notification.error({ message: 'Lỗi', description: 'Mật khẩu xác nhận không khớp.' });
       return;
     }
     
     setIsLoading(true);
-    setError('');
 
     try {
       await authApi.resetPassword(token as string, { password, confirmPassword });
       setSuccess(true);
+      notification.success({ 
+        message: 'Thành công', 
+        description: 'Đặt lại mật khẩu thành công! Đang chuyển hướng về trang đăng nhập...' 
+      });
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Không thể đặt lại mật khẩu. Link có thể đã hết hạn.');
+        notification.error({ 
+          message: 'Lỗi', 
+          description: err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Không thể đặt lại mật khẩu. Link có thể đã hết hạn.' 
+        });
       } else {
-        setError('Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.');
+        notification.error({ message: 'Lỗi hệ thống', description: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.' });
       }
     } finally {
       setIsLoading(false);
@@ -59,18 +65,6 @@ export const ResetPasswordPage: React.FC = () => {
           <p className="text-slate-500 mb-8 font-medium">Nhập mật khẩu mới cho tài khoản của bạn</p>
 
           <form onSubmit={handleSubmit} className="space-y-5 text-left">
-            {error && (
-              <div className="p-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-xl text-sm font-medium animate-fade-in-up">
-                {error}
-              </div>
-            )}
-            
-            {success && (
-              <div className="p-3 bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 text-emerald-600 rounded-xl text-sm font-medium animate-fade-in-up">
-                Đặt lại mật khẩu thành công! Đang chuyển hướng về trang đăng nhập...
-              </div>
-            )}
-
             <div className="relative space-y-1.5">
               <label className="text-sm font-semibold text-slate-700 ml-1">Mật khẩu mới</label>
               <input

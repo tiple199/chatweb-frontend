@@ -2,32 +2,33 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { authApi } from '../../api/auth.api';
+import { notification } from 'antd';
 
 export const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
-  const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setStatus(null);
 
     try {
       await authApi.forgotPassword({ email });
-      setStatus({ 
-        type: 'success', 
-        message: 'Link khôi phục mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến.' 
+      setIsSuccess(true);
+      notification.success({ 
+        message: 'Thành công', 
+        description: 'Link khôi phục mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến.' 
       });
       setEmail('');
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        setStatus({ 
-          type: 'error', 
-          message: err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.' 
+        notification.error({ 
+          message: 'Lỗi', 
+          description: err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.' 
         });
       } else {
-        setStatus({ type: 'error', message: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.' });
+        notification.error({ message: 'Lỗi hệ thống', description: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.' });
       }
     } finally {
       setIsLoading(false);
@@ -51,12 +52,6 @@ export const ForgotPasswordPage: React.FC = () => {
           <p className="text-slate-500 mb-8 font-medium">Nhập email để nhận link đặt lại mật khẩu</p>
 
           <form onSubmit={handleSubmit} className="space-y-5 text-left">
-            {status && (
-              <div className={`p-3 backdrop-blur-sm border rounded-xl text-sm font-medium animate-fade-in-up ${status.type === 'success' ? 'bg-emerald-50/80 border-emerald-100 text-emerald-600' : 'bg-red-50/80 border-red-100 text-red-600'}`}>
-                {status.message}
-              </div>
-            )}
-
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700 ml-1">Email của bạn</label>
               <input
@@ -71,7 +66,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
             <button 
               type="submit" 
-              disabled={isLoading || status?.type === 'success'}
+              disabled={isLoading || isSuccess}
               className="w-full py-3.5 mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (

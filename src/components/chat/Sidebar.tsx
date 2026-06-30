@@ -13,6 +13,7 @@ import type { User } from '../../types/user.type';
 import { mapBackendConversations } from '../../lib/conversationMapper';
 import { useSocket } from '../../hooks/useSocket';
 import { ChatAvatar } from '../ChatAvatar';
+import { notification, Modal } from 'antd';
 
 interface SidebarProps {
   activeConversationId?: string;
@@ -84,19 +85,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
     }
   };
 
-  const handleLogout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken') || '';
-    try {
-      if (refreshToken) {
-        await authApi.logout({ refreshToken });
+  const handleLogout = () => {
+    Modal.confirm({
+      title: 'Đăng xuất',
+      content: 'Bạn có chắc chắn muốn đăng xuất không?',
+      okText: 'Đăng xuất',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        const refreshToken = localStorage.getItem('refreshToken') || '';
+        try {
+          if (refreshToken) {
+            await authApi.logout({ refreshToken });
+          }
+        } catch (err: unknown) {
+          if (err instanceof AxiosError) {
+            console.error("Lỗi gọi API đăng xuất:", err.response?.data?.message || (err as Error).message);
+          }
+        } finally {
+          logout();
+        }
       }
-    } catch (err: unknown) {
-      if (err instanceof AxiosError) {
-        console.error("Lỗi gọi API đăng xuất:", err.response?.data?.message || (err as Error).message);
-      }
-    } finally {
-      logout();
-    }
+    });
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,13 +118,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
       const res = await userApi.updateAvatar(file);
       if (res.data?.data?.user) {
         updateUser(res.data.data.user);
-        alert('Cập nhật ảnh đại diện thành công!');
+        notification.success({ message: 'Thành công', description: 'Cập nhật ảnh đại diện thành công!' });
       }
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Lỗi khi cập nhật ảnh đại diện');
+        notification.error({ message: 'Lỗi', description: err.response?.data?.message || 'Lỗi khi cập nhật ảnh đại diện' });
       } else {
-        alert('Đã xảy ra lỗi không xác định');
+        notification.error({ message: 'Lỗi hệ thống', description: 'Đã xảy ra lỗi không xác định' });
       }
     } finally {
       setIsUploadingAvatar(false);
@@ -123,26 +133,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
     }
   };
 
-  const handleDeleteConversation = async (conversation: Conversation) => {
-    const confirmed = window.confirm(`Xoa doan chat "${conversation.ChatName}" khoi danh sach?`);
-    if (!confirmed) return;
+  const handleDeleteConversation = (conversation: Conversation) => {
+    Modal.confirm({
+      title: 'Xóa đoạn chat',
+      content: `Bạn có chắc chắn muốn xóa đoạn chat "${conversation.ChatName}" khỏi danh sách? Hành động này không thể hoàn tác.`,
+      okText: 'Xóa',
+      cancelText: 'Hủy',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setDeletingConversationId(conversation.ConversationId);
+        setOpenConversationMenuId(null);
 
-    setDeletingConversationId(conversation.ConversationId);
-    setOpenConversationMenuId(null);
-
-    try {
-      await conversationApi.deleteConversation(conversation.ConversationId);
-      setConversations((prev) => prev.filter((conv) => conv.ConversationId !== conversation.ConversationId));
-      onConversationDeleted?.(conversation.ConversationId);
-    } catch (err: unknown) {
-      if (err instanceof AxiosError) {
-        alert(err.response?.data?.message || 'Khong the xoa doan chat nay');
-      } else {
-        alert('Khong the xoa doan chat nay');
+        try {
+          await conversationApi.deleteConversation(conversation.ConversationId);
+          setConversations((prev) => prev.filter((conv) => conv.ConversationId !== conversation.ConversationId));
+          onConversationDeleted?.(conversation.ConversationId);
+          notification.success({ message: 'Thành công', description: 'Đã xóa đoạn chat' });
+        } catch (err: unknown) {
+          if (err instanceof AxiosError) {
+            notification.error({ message: 'Lỗi', description: err.response?.data?.message || 'Không thể xóa đoạn chat này' });
+          } else {
+            notification.error({ message: 'Lỗi', description: 'Không thể xóa đoạn chat này' });
+          }
+        } finally {
+          setDeletingConversationId(null);
+        }
       }
-    } finally {
-      setDeletingConversationId(null);
-    }
+    });
   };
 
   useEffect(() => {
@@ -428,7 +445,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-8 0h10" />
                           </svg>
-                          Xoa doan chat
+                          Xóa đoạn chat
                         </button>
                       </div>
                     )}
