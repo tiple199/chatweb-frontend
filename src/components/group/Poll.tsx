@@ -15,7 +15,7 @@ export const Poll: React.FC<PollProps> = ({ conversationId }) => {
   useEffect(() => {
     const fetchPolls = async () => {
       try {
-        const res = await pollApi.getPolls(conversationId);
+        const res = await pollApi.getPolls(conversationId.toString());
         setPolls(res.data);
       } catch (err: unknown) {
         console.error(err instanceof AxiosError ? err.response?.data : err);
@@ -24,10 +24,10 @@ export const Poll: React.FC<PollProps> = ({ conversationId }) => {
     fetchPolls();
   }, [conversationId]);
 
-  const handleVote = async (pollId: number, optionId: number) => {
+  const handleVote = async (pollId: string, optionId: string) => {
     try {
       await pollApi.votePoll(pollId, optionId); 
-      const res = await pollApi.getPolls(conversationId);
+      const res = await pollApi.getPolls(conversationId.toString());
       setPolls(res.data);
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
@@ -43,7 +43,7 @@ export const Poll: React.FC<PollProps> = ({ conversationId }) => {
           <h4 className="font-bold">{poll.Question}</h4>
           <div className="mt-2 space-y-2">
             {poll.Options.map(opt => {
-              const hasVoted = opt.VoterIds.includes(Number(user?._id) || 0);
+              const hasVoted = user?._id ? opt.VoterIds.includes(String(user._id)) : false;
               return (
                 <button 
                   key={opt.OptionId}

@@ -14,7 +14,7 @@ export const GroupNotes: React.FC<GroupNotesProps> = ({ conversationId }) => {
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const res = await noteApi.getNotes(conversationId);
+        const res = await noteApi.getNotes(conversationId.toString());
         setNotes(res.data);
       } catch (err: unknown) {
         console.error(err instanceof AxiosError ? err.response?.data : err);
@@ -26,7 +26,7 @@ export const GroupNotes: React.FC<GroupNotesProps> = ({ conversationId }) => {
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     try {
-      const res = await noteApi.createNote(conversationId, newNote);
+      const res = await noteApi.createNote(conversationId.toString(), newNote);
       setNotes([res.data, ...notes]);
       setNewNote('');
     } catch (err: unknown) {
