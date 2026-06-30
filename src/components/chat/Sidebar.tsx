@@ -454,7 +454,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeConversationId, onSelect
 
                     {openConversationMenuId === conv.ConversationId && (
                       <div
-                        className="absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl z-40 animate-fade-in-up"
+                        className="absolute right-0 bottom-full mb-1.5 w-44 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl z-40 animate-fade-in-up"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <button

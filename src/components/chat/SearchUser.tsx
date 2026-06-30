@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { userApi } from '../../api/user.api';
 import type { User } from '../../types/user.type';
 import { ChatAvatar } from '../ChatAvatar';
+import { useAuthStore } from '../../store/auth.store';
 
 interface SearchUsersResponse {
   users: User[];
@@ -13,6 +14,7 @@ interface SearchUserProps {
 }
 
 export const SearchUser: React.FC<SearchUserProps> = ({ onSelectUser }) => {
+  const { user: currentUser } = useAuthStore();
   const [query, setQuery] = useState<string>('');
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -61,7 +63,8 @@ export const SearchUser: React.FC<SearchUserProps> = ({ onSelectUser }) => {
     setIsLoading(true);
     try {
       const res = await userApi.searchUsers(value);
-      setUsers((res.data as unknown as { data?: SearchUsersResponse }).data?.users || []);
+      const allUsers = (res.data as unknown as { data?: SearchUsersResponse }).data?.users || [];
+      setUsers(allUsers.filter(u => u._id !== currentUser?._id));
     } catch (err: unknown) {
       if (err instanceof AxiosError) console.error(err);
     } finally {
