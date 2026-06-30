@@ -4,7 +4,7 @@ import { noteApi } from '../../api/group.api';
 import type { GroupNote } from '../../types/group.type';
 
 interface GroupNotesProps {
-  conversationId: number;
+  conversationId: string;
 }
 
 export const GroupNotes: React.FC<GroupNotesProps> = ({ conversationId }) => {
@@ -14,7 +14,7 @@ export const GroupNotes: React.FC<GroupNotesProps> = ({ conversationId }) => {
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const res = await noteApi.getNotes(conversationId.toString());
+        const res = await noteApi.getNotes(conversationId);
         setNotes(res.data);
       } catch (err: unknown) {
         console.error(err instanceof AxiosError ? err.response?.data : err);
@@ -26,7 +26,7 @@ export const GroupNotes: React.FC<GroupNotesProps> = ({ conversationId }) => {
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     try {
-      const res = await noteApi.createNote(conversationId.toString(), newNote);
+      const res = await noteApi.createNote(conversationId, newNote);
       setNotes([res.data, ...notes]);
       setNewNote('');
     } catch (err: unknown) {

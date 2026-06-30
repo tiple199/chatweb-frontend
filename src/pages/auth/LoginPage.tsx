@@ -5,17 +5,6 @@ import { authApi } from '../../api/auth.api';
 import { useAuthStore } from '../../store/auth.store'; 
 import { Eye, EyeOff } from 'lucide-react';
 import { notification } from 'antd';
-import type { User } from '../../types/user.type';
-
-interface AuthResponse {
-  user: User;
-  accessToken: string;
-}
-
-interface LoginApiResponse {
-  data: AuthResponse;
-}
-
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);

@@ -5,7 +5,7 @@ import type { Poll as PollType } from '../../types/group.type';
 import { useAuthStore } from '../../store/auth.store';
 
 interface PollProps {
-  conversationId: number;
+  conversationId: string;
 }
 
 export const Poll: React.FC<PollProps> = ({ conversationId }) => {
@@ -15,7 +15,7 @@ export const Poll: React.FC<PollProps> = ({ conversationId }) => {
   useEffect(() => {
     const fetchPolls = async () => {
       try {
-        const res = await pollApi.getPolls(conversationId.toString());
+        const res = await pollApi.getPolls(conversationId);
         setPolls(res.data);
       } catch (err: unknown) {
         console.error(err instanceof AxiosError ? err.response?.data : err);
@@ -27,7 +27,7 @@ export const Poll: React.FC<PollProps> = ({ conversationId }) => {
   const handleVote = async (pollId: string, optionId: string) => {
     try {
       await pollApi.votePoll(pollId, optionId); 
-      const res = await pollApi.getPolls(conversationId.toString());
+      const res = await pollApi.getPolls(conversationId);
       setPolls(res.data);
     } catch (err: unknown) {
       if (err instanceof AxiosError) {

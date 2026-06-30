@@ -5,8 +5,7 @@ import type { Message } from '../../types/message.type';
 import type { ConversationParticipant } from '../../types/conversation.type';
 import { mapBackendMessage } from '../../lib/messageMapper';
 import { normalizeMediaUrl } from '../../lib/utils';
-import { ChatAvatar } from '../ChatAvatar';
-import { Key } from 'lucide-react';
+import { GroupMembers } from '../group/GroupMenbers';
 
 interface ChatInfoDrawerProps {
   conversationId: string;
@@ -153,63 +152,6 @@ export const ChatInfoDrawer: React.FC<ChatInfoDrawerProps> = ({ conversationId, 
     }
   };
 
-  const MemberItem: React.FC<{ member: ConversationParticipant }> = ({ member }) => (
-    <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-all shadow-sm">
-      <div className="relative">
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shadow-sm ring-2 ring-white overflow-hidden">
-          <ChatAvatar 
-            avatarUrl={member?.avatar || null} 
-            fullName={member?.fullName || 'U'} 
-            size={32} 
-          />
-        </div>
-        
-        {/* Badge Admin hiển thị ở góc dưới bên phải avatar */}
-        {member.role === 'admin' && (
-          <div className="absolute -bottom-0.5 -right-0.5 bg-amber-400 p-0.5 rounded-full border border-white text-white">
-            <Key size={10} strokeWidth={3} />
-          </div>
-        )}
-      </div>
-
-      <span className="text-sm font-medium text-slate-700 truncate">{member.fullName}</span>
-      
-      {member.role === 'admin' && (
-        <span className="ml-auto text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">
-          Admin
-        </span>
-      )}
-      <div className="ml-auto  rounded-full hover:bg-gray-100 transition-all">
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-          title="Tuy chon"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M5 10a2 2 0 110 4 2 2 0 010-4zm7 0a2 2 0 110 4 2 2 0 010-4zm7 0a2 2 0 110 4 2 2 0 010-4z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderMemberList = () => {
-    if (members.length <= 2) return null; // Không hiển thị danh sách thành viên nếu là chat 1-1
-
-    return (
-      <div className="border-t border-slate-100 p-4 bg-slate-50/50">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">Thành viên ({members.length})</h3>
-        <div className="flex flex-col gap-2">
-          {members.map(member => (
-            <MemberItem key={member.userId} member={member} />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   // 3. Render Button Rời nhóm màu đỏ & icon
   const renderStickyButton = () => {
     if (members.length <= 2) return null; // Chỉ hiển thị nút rời nhóm nếu là nhóm chat (nhiều hơn 2 thành viên)
@@ -269,7 +211,7 @@ export const ChatInfoDrawer: React.FC<ChatInfoDrawerProps> = ({ conversationId, 
         {renderContent()}
       </div>
 
-      {renderMemberList()}
+      <GroupMembers conversationId={conversationId} />
       {renderStickyButton()}
     </div>
   );
